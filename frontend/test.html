@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تشخيص STT</title>
+<style>
+body{background:#0a0a14;color:#f0f0f5;font-family:monospace;padding:16px;font-size:13px;line-height:1.8;direction:rtl}
+h2{color:#00e5c0;margin-bottom:16px}
+#log{background:rgba(255,255,255,.06);padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;font-size:12px;min-height:200px}
+.ok{color:#00e5c0}.bad{color:#ff4d6d}.warn{color:#ffb84d}.info{color:#8a8aa0}
+button{background:#7c5cff;color:#fff;border:none;padding:14px 24px;border-radius:10px;font-size:15px;margin:14px 0;cursor:pointer;width:100%;font-family:inherit}
+</style>
+</head>
+<body>
+<h2>🔬 تشخيص الميكروفون و STT</h2>
+<div id="log"></div>
+<script>
+const logEl=document.getElementById('log');
+const log=(m,c='info')=>{const d=document.createElement('div');d.className=c;d.textContent='['+new Date().toLocaleTimeString('ar')+'] '+m;logEl.appendChild(d);logEl.scrollTop=logEl.scrollHeight;};
+log('UA: '+navigator.userAgent);
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+log('SpeechRecognition: '+(SR?'مدعوم ✅':'غير مدعوم ❌'),SR?'ok':'bad');
+if(!SR){log('الخلاصة: المتصفح لا يدعم Web Speech API. سنستخدم STT من الخادم في المرحلة الرابعة.','bad');}
+else if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){log('getUserMedia غير متاح ❌','bad');}
+else{
+  log('جارٍ فحص إذن الميكروفون...');
+  navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{
+    log('إذن الميكروفون: مسموح ✅','ok');s.getTracks().forEach(t=>t.stop());
+    const btn=document.createElement('button');btn.textContent='🎤 اضغط للتحدث';document.body.appendChild(btn);
+    btn.onclick=()=>{
+      log('----- جلسة جديدة -----','warn');
+      const r=new SR();r.lang='ar-SA';r.continuous=false;r.interimResults=true;
+      r.onstart=()=>log('onstart ✅','ok');
+      r.onaudiostart=()=>log('onaudiostart ✅ (يُلتقط الصوت)','ok');
+      r.onspeechstart=()=>log('onspeechstart ✅ (كُشف كلام)','ok');
+      r.onspeechend=()=>log('onspeechend (توقف الكلام)');
+      r.onaudioend=()=>log('onaudioend');
+      r.onresult=(e)=>{let f='',i2='';for(let i=e.resultIndex;i<e.results.length;i++){const x=e.results[i];if(x.isFinal)f+=x[0].transcript;else i2+=x[0].transcript;}if(i2)log('📝 مؤقت: "'+i2+'"','warn');if(f)log('✅ نهائي: "'+f+'"','ok');};
+      r.onerror=(e)=>{log('❌ onerror: '+e.error+(e.message?' — '+e.message:''),'bad');};
+      r.onnomatch=()=>log('onnomatch (لم يُتعرف)','warn');
+      r.onend=()=>log('onend (انتهت الجلسة)','warn');
+      try{r.start();log('start() نُفّذ — تحدث الآن...','ok');}catch(e){log('فشل start(): '+e,'bad');}
+    };
+  }).catch(err=>log('إذن الميكروفون: مرفوض ❌ ('+err.name+')','bad'));
+}
+</script>
+</body>
+</html>

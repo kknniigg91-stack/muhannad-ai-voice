@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a14">
+<title>تدريب صوت مهند الطائي — Muhannad AI Voice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg-1:#050510;--glass:rgba(255,255,255,0.06);--glass-strong:rgba(255,255,255,0.10);--border:rgba(255,255,255,0.12);--accent:#7c5cff;--accent-2:#00e5c0;--danger:#ff4d6d;--warn:#ffb84d;--text:#f0f0f5;--muted:#8a8aa0}
+html,body{min-height:100%;font-family:'Tajawal',system-ui,-apple-system,sans-serif;color:var(--text);background:radial-gradient(circle at 20% 10%,#1a1230 0%,var(--bg-1) 45%,#02020a 100%);background-attachment:fixed}
+body::before{content:'';position:fixed;inset:-50%;z-index:0;pointer-events:none;background:conic-gradient(from 0deg,transparent,rgba(124,92,255,.10),transparent 60%);animation:spin 40s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:100dvh}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0}
+.back{color:var(--muted);text-decoration:none;font-size:13.5px;padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:var(--glass);transition:.2s}
+.back:active{transform:scale(.97)}
+.title{text-align:center;flex:1}
+.title h1{font-size:17px;font-weight:700;background:linear-gradient(90deg,#fff,#b8a8ff,#7de8d5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.title p{font-size:11px;color:var(--muted);margin-top:2px}
+.card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:16px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;flex-direction:column;gap:12px}
+.card h2{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.dot.ok{background:var(--accent-2);box-shadow:0 0 10px var(--accent-2)}
+.dot.warn{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+.dot.bad{background:var(--danger);box-shadow:0 0 10px var(--danger)}
+.status-line{font-size:13px;color:var(--muted);line-height:1.7}
+.status-line strong{color:var(--text)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600}
+.badge.ok{background:rgba(0,229,192,.15);color:var(--accent-2);border:1px solid rgba(0,229,192,.35)}
+.badge.warn{background:rgba(255,184,77,.15);color:var(--warn);border:1px solid rgba(255,184,77,.35)}
+.badge.bad{background:rgba(255,77,109,.15);color:var(--danger);border:1px solid rgba(255,77,109,.35)}
+.tabs{display:flex;gap:8px;background:rgba(255,255,255,.04);padding:4px;border-radius:12px;border:1px solid var(--border)}
+.tab{flex:1;padding:10px;border:none;background:transparent;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;border-radius:9px;cursor:pointer;transition:.2s}
+.tab.active{background:linear-gradient(135deg,rgba(124,92,255,.35),rgba(124,92,255,.15));color:#fff;box-shadow:0 2px 8px rgba(124,92,255,.25)}
+.tab:active{transform:scale(.98)}
+.tab-content{display:none;flex-direction:column;gap:12px}
+.tab-content.active{display:flex}
+.rec-btn{width:110px;height:110px;border-radius:50%;margin:8px auto;background:radial-gradient(circle at 30% 30%,rgba(255,77,109,.5),rgba(60,10,30,.9));border:1px solid rgba(255,77,109,.5);cursor:pointer;display:grid;place-items:center;transition:.25s;box-shadow:inset 0 0 40px rgba(255,77,109,.25),0 8px 24px rgba(0,0,0,.4);-webkit-appearance:none;appearance:none;padding:0}
+.rec-btn svg{width:44px;height:44px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.rec-btn:active{transform:scale(.95)}
+.rec-btn.recording{animation:breathe 1.3s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:inset 0 0 40px rgba(255,77,109,.35),0 8px 24px rgba(0,0,0,.4)}50%{box-shadow:inset 0 0 70px rgba(255,77,109,.55),0 8px 40px rgba(255,77,109,.4)}}
+.timer{text-align:center;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--warn);letter-spacing:2px;min-height:32px}
+.file-input-wrap{position:relative;border:2px dashed var(--border);border-radius:14px;padding:22px 14px;text-align:center;transition:.2s;cursor:pointer}
+.file-input-wrap:active{transform:scale(.99)}
+.file-input-wrap input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.file-input-wrap svg{width:34px;height:34px;stroke:var(--accent);fill:none;stroke-width:1.8;margin-bottom:6px}
+.file-input-wrap p{font-size:13px;color:var(--text);margin-bottom:2px}
+.file-input-wrap small{font-size:11px;color:var(--muted)}
+.filename{margin-top:6px;font-size:11.5px;color:var(--accent-2);word-break:break-all}
+audio{width:100%;height:44px;border-radius:12px;background:rgba(0,0,0,.3)}
+.btn{padding:12px 16px;border-radius:12px;border:1px solid var(--border);background:var(--glass-strong);color:var(--text);font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:.2s;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;gap:8px;-webkit-appearance:none;appearance:none;touch-action:manipulation}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#7c5cff,#5a3ce0);border-color:transparent;color:#fff;box-shadow:0 6px 20px rgba(124,92,255,.35)}
+.btn-success{background:linear-gradient(135deg,#00c4a3,#00a085);border-color:transparent;color:#001a15;box-shadow:0 6px 20px rgba(0,196,163,.35)}
+.btn-ghost{background:transparent}
+.msg{padding:10px 14px;border-radius:11px;font-size:12.5px;line-height:1.7;display:none;word-break:break-word}
+.msg.show{display:block}
+.msg.ok{background:rgba(0,229,192,.12);border:1px solid rgba(0,229,192,.35);color:#a8fff0}
+.msg.bad{background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.35);color:#ffc0cc}
+.msg.info{background:rgba(124,92,255,.12);border:1px solid rgba(124,92,255,.35);color:#d4c5ff}
+.guide{font-size:12px;color:var(--muted);line-height:1.9;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border-right:3px solid var(--accent)}
+.guide strong{color:var(--text)}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <a class="back" href="/">← رجوع</a>
+    <div class="title">
+      <h1>🎙️ تدريب صوت مهند الطائي</h1>
+      <p>المرحلة 2 — تسجيل ورفع واعتماد عينة الصوت</p>
+    </div>
+    <div style="width:52px"></div>
+  </div>
+
+  <!-- حالة نموذج الصوت -->
+  <div class="card">
+    <h2><span class="dot" id="statusDot"></span> حالة نموذج الصوت</h2>
+    <div class="status-line" id="statusLine">جارٍ التحقق...</div>
+    <div id="approvedInfo" class="hidden">
+      <div class="status-line" style="margin-top:6px">
+        <strong>العينة المعتمدة:</strong> <span id="approvedName" style="color:var(--accent-2)"></span>
+      </div>
+      <audio id="approvedAudio" controls style="margin-top:8px"></audio>
+    </div>
+  </div>
+
+  <!-- التبويبات -->
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" data-tab="record" type="button">🎤 تسجيل مباشر</button>
+      <button class="tab" data-tab="upload" type="button">📁 رفع ملف</button>
+    </div>
+
+    <!-- تسجيل مباشر -->
+    <div class="tab-content active" id="tab-record">
+      <div class="guide">
+        <strong>قبل التسجيل:</strong> كن في غرفة هادئة، اقترب من الميكروفون 10–15 سم، وتحدّث بجُمل عربية طبيعية واضحة لمدة <strong>30–60 ثانية</strong>.
+      </div>
+      <button class="rec-btn" id="recBtn" type="button" aria-label="زر التسجيل">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="#fff" stroke="none"/></svg>
+      </button>
+      <div class="timer" id="timer">00:00</div>
+      <audio id="recAudio" controls class="hidden"></audio>
+      <button class="btn btn-primary" id="uploadRecBtn" type="button" disabled>⬆ رفع التسجيل إلى الخادم</button>
+    </div>
+
+    <!-- رفع ملف -->
+    <div class="tab-content" id="tab-upload">
+      <label class="file-input-wrap">
+        <input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm,.aac,.flac,.opus">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p>اضغط لاختيار ملف صوتي من الهاتف</p>
+        <small>mp3, wav, m4a, ogg, webm, aac — حتى 25 ميجابايت</small>
+      </label>
+      <div class="filename" id="fileName"></div>
+      <audio id="fileAudio" controls class="hidden"></audio>
+      <button class="btn btn-primary" id="uploadFileBtn" type="button" disabled>⬆ رفع الملف إلى الخادم</button>
+    </div>
+
+    <div class="msg" id="uploadMsg"></div>
+    <div class="msg" id="errorMsg"></div>
+  </div>
+
+  <!-- الاعتماد -->
+  <div class="card">
+    <h2><span class="dot" id="approveDot"></span> اعتماد العينة الصوتية</h2>
+    <div class="status-line">بعد رفع العينة بنجاح، اضغط «اعتماد» لتأكيد موافقتك على استخدامها لإنشاء النموذج الصوتي في المرحلة التالية.</div>
+    <div class="status-line" id="lastUploadLine" style="color:var(--accent-2);display:none"></div>
+    <button class="btn btn-success" id="approveBtn" type="button" disabled>✓ اعتماد العينة الصوتية</button>
+    <div class="msg" id="approveMsg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  const API = '';  // same-origin (FastAPI)
+  const $ = id => document.getElementById(id);
+  const statusDot = $('statusDot'), statusLine = $('statusLine');
+  const approvedInfo = $('approvedInfo'), approvedName = $('approvedName'), approvedAudio = $('approvedAudio');
+  const approveDot = $('approveDot'), approveBtn = $('approveBtn'), approveMsg = $('approveMsg');
+  const lastUploadLine = $('lastUploadLine');
+  const uploadMsg = $('uploadMsg'), errorMsg = $('errorMsg');
+
+  // Tab state
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      $('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  function showMsg(el, text, type) {
+    el.className = 'msg show ' + type;
+    el.textContent = text;
+  }
+  function hideMsg(el) { el.classList.remove('show'); }
+
+  // ───── الحالة ─────
+  async function refreshStatus() {
+    try {
+      const r = await fetch(API + '/api/voice-status');
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      if (d.approved && d.approved_meta) {
+        statusDot.className = 'dot ok';
+        statusLine.innerHTML = 'النموذج الصوتي <strong>جاهز للاعتماد ✅</strong> — العينة المعتمدة موجودة.';
+        approvedInfo.classList.remove('hidden');
+        approvedName.textContent = d.approved_meta.filename + ' (' + (d.approved_meta.size/1024).toFixed(1) + ' KB)';
+        approvedAudio.src = API + '/api/sample/' + encodeURIComponent(d.approved_meta.filename) + '?t=' + Date.now();
+        approveDot.className = 'dot ok';
+        approveBtn.disabled = true;
+        approveBtn.textContent = '✓ تم الاعتماد مسبقًا';
+      } else if (d.has_sample) {
+        statusDot.className = 'dot warn';
+        statusLine.innerHTML = 'عينة محفوظة لكن <strong>غير معتمدة</strong> — اعتمدها من الأسفل. (' + d.samples_count + ' ملف)';
+        approvedInfo.classList.add('hidden');
+        approveDot.className = 'dot warn';
+        approveBtn.disabled = false;
+        approveBtn.textContent = '✓ اعتماد العينة الأخيرة';
+      } else {
+        statusDot.className = 'dot bad';
+        statusLine.innerHTML = 'لا يوجد نموذج صوتي بعد. سجّل أو ارفع عينة أولاً.';
+        approvedInfo.classList.add('hidden');
+        approveDot.className = 'dot';
+        approveBtn.disabled = true;
+        approveBtn.textContent = '✓ اعتماد العينة الصوتية';
+      }
+      return d;
+    } catch (e) {
+      statusDot.className = 'dot bad';
+      statusLine.textContent = '❌ تعذّر الاتصال بالخادم: ' + e.message;
+      return null;
+    }
+  }
+  refreshStatus();
+
+  // ───── تسجيل مباشر ─────
+  const recBtn = $('recBtn'), timerEl = $('timer'), recAudio = $('recAudio'), uploadRecBtn = $('uploadRecBtn');
+  let mediaRecorder = null, chunks = [], recordedBlob = null, recordedUrl = null;
+  let timerInterval = null, startTs = 0, isRecording = false;
+  let currentUploadedFile = null;
+
+  function fmtTime(ms) {
+    const s = Math.floor(ms/1000);
+    return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  }
+
+  async function toggleRecord() {
+    if (isRecording) return stopRecording();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      let mime = '';
+      for (const cand of ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg']) {
+        if (window.MediaRecorder && MediaRecorder.isTypeSupported(cand)) { mime = cand; break; }
+      }
+      mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      chunks = [];
+      mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        recordedBlob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+        if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+        recordedUrl = URL.createObjectURL(recordedBlob);
+        recAudio.src = recordedUrl;
+        recAudio.classList.remove('hidden');
+        uploadRecBtn.disabled = false;
+        const ext = (mediaRecorder.mimeType || '').includes('ogg') ? 'ogg' : 'webm';
+        recordedBlob._ext = ext;
+      };
+      mediaRecorder.start();
+      isRecording = true;
+      recBtn.classList.add('recording');
+      recAudio.classList.add('hidden');
+      uploadRecBtn.disabled = true;
+      hideMsg(uploadMsg); hideMsg(errorMsg);
+      startTs = Date.now();
+      timerEl.textContent = '00:00';
+      timerInterval = setInterval(() => { timerEl.textContent = fmtTime(Date.now() - startTs); }, 200);
+    } catch (e) {
+      showMsg(errorMsg, '❌ فشل الوصول للميكروفون: ' + e.message, 'bad');
+    }
+  }
+
+  function stopRecording() {
+    if (!mediaRecorder) return;
+    try { mediaRecorder.stop(); } catch(e){}
+    isRecording = false;
+    clearInterval(timerInterval);
+    recBtn.classList.remove('recording');
+  }
+
+  recBtn.addEventListener('click', toggleRecord);
+
+  async function uploadBlob(blob, filename) {
+    hideMsg(uploadMsg); hideMsg(errorMsg);
+    const fd = new FormData();
+    fd.append('file', blob, filename);
+    showMsg(uploadMsg, '⏳ جارٍ الرفع...', 'info');
+    try {
+      const r = await fetch(API + '/api/upload-voice', { method:'POST', body: fd });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+      currentUploadedFile = d.filename;
+      showMsg(uploadMsg, '✅ تم الرفع: ' + d.filename + ' — الحجم: ' + (d.size/1024).toFixed(1) + ' KB', 'ok');
+      lastUploadLine.style.display = 'block';
+      lastUploadLine.textContent = 'آخر ملف مرفوع: ' + d.filename;
+      approveBtn.disabled = false;
+      approveBtn.textContent = '✓ اعتماد هذا الملف';
+      await refreshStatus();
+      return d;
+    } catch (e) {
+      showMsg(errorMsg, '❌ فشل الرفع: ' + e.message, 'bad');
+      return null;
+    }
+  }
+
+  uploadRecBtn.addEventListener('click', () => {
+    if (!recordedBlob) return;
+    const ext = recordedBlob._ext || 'webm';
+    uploadBlob(recordedBlob, 'record_' + Date.now() + '.' + ext);
+  });
+
+  // ───── رفع ملف ─────
+  const fileInput = $('fileInput'), fileAudio = $('fileAudio'), uploadFileBtn = $('uploadFileBtn'), fileNameEl = $('fileName');
+  let pendingFile = null;
+
+  fileInput.addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    pendingFile = f || null;
+    if (!f) {
+      fileNameEl.textContent = '';
+      fileAudio.classList.add('hidden');
+      uploadFileBtn.disabled = true;
+      return;
+    }
+    fileNameEl.textContent = '📎 ' + f.name + ' — ' + (f.size/1024).toFixed(1) + ' KB';
+    fileAudio.src = URL.createObjectURL(f);
+    fileAudio.classList.remove('hidden');
+    uploadFileBtn.disabled = false;
+    hideMsg(uploadMsg); hideMsg(errorMsg);
+  });
+
+  uploadFileBtn.addEventListener('click', () => {
+    if (!pendingFile) return;
+    uploadBlob(pendingFile, pendingFile.name);
+  });
+
+  // ───── الاعتماد ─────
+  approveBtn.addEventListener('click', async () => {
+    hideMsg(approveMsg);
+    // إذا لم يحدد المستخدم ملفًا صريحًا، اعتمد أحدث ملف مرفوع
+    let target = currentUploadedFile;
+    if (!target) {
+      const st = await refreshStatus();
+      if (!st || !st.latest) {
+        showMsg(approveMsg, '❌ لا يوجد ملف لاعتماده. ارفع عينة أولاً.', 'bad');
+        return;
+      }
+      target = st.latest;
+    }
+    showMsg(approveMsg, '⏳ جارٍ الاعتماد...', 'info');
+    try {
+      const r = await fetch(API + '/api/approve-voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: target })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+      showMsg(approveMsg, '✅ تم اعتماد العينة: ' + d.approved.filename, 'ok');
+      await refreshStatus();
+    } catch (e) {
+      showMsg(approveMsg, '❌ فشل الاعتماد: ' + e.message, 'bad');
+    }
+  });
+})();
+</script>
+</body>
+</html>

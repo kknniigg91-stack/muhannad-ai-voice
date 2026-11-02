@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استنساخ الصوت - Hakim</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{background:#0a0a14;color:#fff;font-family:'Tajawal',sans-serif;padding:20px;display:flex;flex-direction:column;gap:16px;align-items:center;min-height:100dvh;justify-content:center}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:20px;width:100%;max-width:480px;backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:14px}
+h1{font-size:20px;text-align:center;background:linear-gradient(90deg,#fff,#b8a8ff);-webkit-background-clip:text;color:transparent;margin:0}
+p{font-size:13px;color:#8a8aa0;text-align:center;margin:0;line-height:1.6}
+.btn{padding:14px;border-radius:12px;border:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;color:#fff;display:flex;justify-content:center;align-items:center;gap:8px}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-clone{background:linear-gradient(135deg,#7c5cff,#5a3ce0);box-shadow:0 4px 15px rgba(124,92,255,.4)}
+.btn-speak{background:linear-gradient(135deg,#00c4a3,#00a085);color:#001a15;box-shadow:0 4px 15px rgba(0,196,163,.4)}
+textarea{width:100%;height:100px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:12px;color:#fff;font-family:inherit;font-size:15px;resize:none}
+textarea:focus{outline:none;border-color:#7c5cff}
+.msg{padding:12px;border-radius:8px;font-size:13px;display:none;text-align:center;word-break:break-word;margin-top:10px}
+.msg.show{display:block}
+.msg.ok{background:rgba(0,229,192,.1);border:1px solid rgba(0,229,192,.3);color:#00e5c0}
+.msg.bad{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:#ff4d6d}
+.msg.info{background:rgba(124,92,255,.1);border:1px solid rgba(124,92,255,.3);color:#b8a8ff}
+audio{width:100%;margin-top:10px;display:none}
+audio.show{display:block}
+.back{text-decoration:none;color:#8a8aa0;font-size:14px;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+  <!-- الخطوة 1: الاستنساخ -->
+  <div class="card" id="cardClone">
+    <h1>🎙️ الخطوة 1: استنساخ الصوت</h1>
+    <p>سنرسل عينتك المعتمدة إلى Hakim AI لإنشاء نموذج صوتي خاص بك.</p>
+    <button class="btn btn-clone" id="cloneBtn">استنساخ صوتي الآن</button>
+    <div class="msg" id="cloneMsg"></div>
+  </div>
+
+  <!-- الخطوة 2: التوليد -->
+  <div class="card" id="cardSpeak" style="display:none">
+    <h1>🔊 الخطوة 2: توليد الكلام</h1>
+    <p>اكتب أي جملة عربية، وراح تسمعها بصوتك المستنسخ!</p>
+    <textarea id="textInput" placeholder="مثال: أهلاً بيك عيني، أنا مهند الطائي، هذا اختبار لصوتي المستنسخ."></textarea>
+    <button class="btn btn-speak" id="speakBtn">توليد الكلام بصوتي</button>
+    <div class="msg" id="speakMsg"></div>
+    <audio id="audioPlayer" controls></audio>
+  </div>
+
+  <a href="/" class="back">← رجوع للرئيسية</a>
+
+<script>
+const cloneBtn = document.getElementById('cloneBtn');
+const cloneMsg = document.getElementById('cloneMsg');
+const cardSpeak = document.getElementById('cardSpeak');
+const speakBtn = document.getElementById('speakBtn');
+const speakMsg = document.getElementById('speakMsg');
+const audioPlayer = document.getElementById('audioPlayer');
+const textInput = document.getElementById('textInput');
+
+function showMsg(el, text, type) {
+  el.textContent = text;
+  el.className = 'msg show ' + type;
+}
+
+// الخطوة 1: استنساخ
+cloneBtn.addEventListener('click', async () => {
+  cloneBtn.disabled = true;
+  showMsg(cloneMsg, '⏳ جارٍ إرسال العينة إلى Hakim للاستنساخ... (قد يستغرق 30-60 ثانية)', 'info');
+  try {
+    const r = await fetch('/api/clone-voice-hakim', { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'خطأ غير معروف');
+    
+    showMsg(cloneMsg, '✅ ' + d.message + ' (ID: ' + d.voice_id + ')', 'ok');
+    cloneBtn.textContent = '✅ تم الاستنساخ بنجاح';
+    cardSpeak.style.display = 'flex'; // إظهار الخطوة الثانية
+  } catch (e) {
+    showMsg(cloneMsg, '❌ ' + e.message, 'bad');
+    cloneBtn.disabled = false;
+  }
+});
+
+// الخطوة 2: توليد
+speakBtn.addEventListener('click', async () => {
+  const text = textInput.value.trim();
+  if (!text) return showMsg(speakMsg, '⚠️ اكتب نصاً أولاً', 'bad');
+  
+  speakBtn.disabled = true;
+  showMsg(speakMsg, '⏳ جارٍ توليد الصوت...', 'info');
+  audioPlayer.classList.remove('show');
+  
+  try {
+    const r = await fetch('/api/generate-speech-hakim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text })
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.detail || 'خطأ غير معروف');
+    
+    audioPlayer.src = d.audio_url + '?t=' + Date.now();
+    audioPlayer.classList.add('show');
+    audioPlayer.play();
+    showMsg(speakMsg, '✅ تم توليد الصوت بنجاح!', 'ok');
+  } catch (e) {
+    showMsg(speakMsg, '❌ ' + e.message, 'bad');
+  } finally {
+    speakBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
