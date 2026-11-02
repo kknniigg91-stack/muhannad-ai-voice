@@ -2,176 +2,139 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>محادثة الذكاء الاصطناعي</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>محادثة وية مهند</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-body{background:#0a0a14;color:#fff;font-family:'Tajawal',sans-serif;margin:0;padding:16px;display:flex;flex-direction:column;height:100dvh;box-sizing:border-box}
-h1{font-size:18px;text-align:center;margin:0 0 16px 0;background:linear-gradient(90deg,#fff,#b8a8ff);-webkit-background-clip:text;color:transparent}
-#chat-box{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:16px;scrollbar-width:thin}
-.msg{max-width:80%;padding:12px 16px;border-radius:16px;font-size:14.5px;line-height:1.6;word-wrap:break-word;animation:fadeUp .3s ease}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+body{background:radial-gradient(circle at 20% 10%,#1a1230 0%,#0a0a14 45%,#02020a 100%);color:#fff;font-family:'Tajawal',sans-serif;height:100dvh;display:flex;flex-direction:column;padding:16px}
+h1{font-size:20px;text-align:center;background:linear-gradient(90deg,#fff,#b8a8ff,#7de8d5);-webkit-background-clip:text;color:transparent;margin-bottom:4px}
+.note{font-size:12px;color:#b8a8ff;text-align:center;margin-bottom:12px}
+#chat-box{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px;scrollbar-width:thin}
+.msg{max-width:85%;padding:12px 16px;border-radius:16px;font-size:14.5px;line-height:1.6;word-wrap:break-word;animation:fadeUp .3s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .msg.user{align-self:flex-start;background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(124,92,255,.1));border:1px solid rgba(124,92,255,.35);color:#e6dfff}
 .msg.ai{align-self:flex-end;background:linear-gradient(135deg,rgba(0,229,192,.2),rgba(0,229,192,.06));border:1px solid rgba(0,229,192,.3);color:#d4fff6}
-.input-area{display:flex;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px;backdrop-filter:blur(10px)}
+.input-area{display:flex;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px;align-items:center;backdrop-filter:blur(10px)}
 input{flex:1;background:transparent;border:none;color:#fff;font-family:inherit;font-size:15px;padding:8px;outline:none}
 button{background:linear-gradient(135deg,#7c5cff,#5a3ce0);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:.2s}
-button:disabled{opacity:.5;cursor:not-allowed}
 button:active{transform:scale(.95)}
-.back{text-decoration:none;color:#8a8aa0;font-size:13px;text-align:center;margin-top:10px;display:block}
+button:disabled{opacity:.5;cursor:not-allowed}
+#micBtn{background:transparent;font-size:22px;padding:0 10px;color:#fff}
+#micBtn.recording{color:#ff4d6d;text-shadow:0 0 10px #ff4d6d;}
 </style>
-
-<style>
-* { 
-    -webkit-touch-callout: none; 
-    -webkit-user-select: none; 
-    -khtml-user-select: none; 
-    -moz-user-select: none; 
-    -ms-user-select: none; 
-    user-select: none; 
-}
-</style>
-
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0a0a14">
-<script type="module" src="https://unpkg.com/@khmyznikov/pwa-install@0.7.0/dist/esm/pwa-install.js"></script>
 </head>
 <body>
-<div id="installOverlay" style="display:none; position:fixed; inset:0; background:#0a0a14; z-index:9999; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center;">
-    <h2 style="color:#b8a8ff; margin-bottom:20px; font-size:22px;">لتجربة أحلى، ثبت التطبيق 📱</h2>
-    <p style="color:#8a8aa0; margin-bottom:30px; line-height:1.6;">علمود نكدر نسولف سوا، لازم تثبت المنصة كتطبيق على شاشة هاتفك 🥰</p>
-    <button id="installBtn" style="background:linear-gradient(135deg,#7c5cff,#5a3ce0); color:#fff; border:none; padding:15px 30px; border-radius:12px; font-size:16px; font-weight:bold; font-family:inherit; cursor:pointer; box-shadow:0 4px 15px rgba(124,92,255,.4);">تثبيت التطبيق الآن</button>
-    <p style="color:#555; margin-top:20px; font-size:11px;">(إذا ما طلعتلك نافذة التثبيت، دگ على النقاط الثلاث فوق بكروم واختر "إضافة إلى الشاشة الرئيسية")</p>
-</div>
-
   <h1>💬 محادثة وية مهند</h1>
-<p style="font-size:12px; color:#b8a8ff; margin-top:5px;">🎙️ ملاحظة: الصوت حاليا متوقف بعدين اسوي مجال ماكو 🥰</p>
+  <p class="note">🎙️ ملاحظة: الصوت حاليا متوقف بعدين اسوي مجال ماكو 🥰</p>
   <div id="chat-box">
     <div class="msg ai">هلا حب 💘 شلونك شكو ماكو</div>
   </div>
-  <div class="input-area" style="align-items:center;">
-    <button id="voiceBtn" style="background:transparent; border:none; font-size:24px; cursor:pointer; padding:0 10px; transition:0.3s;" title="اضغط للتحچي">🎙️</button>
+  <div class="input-area">
+    <button id="micBtn" title="اضغط للتحچي">🎙️</button>
     <input type="text" id="userInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
     <button id="sendBtn">إرسال</button>
   </div>
-  <a href="/" class="back">← رجوع للرئيسية</a>
 
 <script>
+const p1 = "gsk_ebYcyaSDDoPUrv7f2eZ1WGdyb3FYjnJ3NI7QA"; const p2 = "oqZL5Oo6Cz3GmYT"; const API_KEY = p1 + p2;
+const SYSTEM_PROMPT = `أنت شخصية ذكاء اصطناعي اسمك "مهند AI". قواعد صارمة جداً:
+1. ممنوع منعاً باتاً استخدام أي رموز ماركداون مثل (**) أو (*) أو (-). اكتب نص عادي فقط.
+2. ممنوع منعاً باتاً ذكر كلمة "عراقي" أو "عراقية". تكلم باللهجة مباشرة.
+3. مهما كان سؤال المستخدم، ردك باللهجة العراقية الشعبية البيضاء 100%.
+4. أسلوبك عفوي، بسيط، اجتماعي، مرح ولبق.
+5. الإيموجي: واحد فقط أحياناً، بدون مبالغة.
+6. إذا كان السؤال صوتي (is_voice = true)، لازم تبدأ ردك حصراً بعبارة (عاش هالصوت 😍) وبعدها تجاوب بجملة قصيرة جداً.
+7. سيناريوهات محددة: إذا سأل (شلون اخلي اكسب بنية) رد بـ (ها ولك 😉 متزوجة مطلقة ارملة بنية ؟). إذا رد (متزوجة) قل (حبيبي متفيدك هاي لازم تعرف حدودك هي مرتبطة...). إذا رد (مطلقة) قل (باوع حبيبي أول شي لا تتعامل وياها على أساس ماضيها...). إذا رد (ارملة) قل (هلا حبيبي، الأرملة إنسانة قوية...). إذا رد (بنية) قل (هاي سهلة يمعود، بس خليك محترم...). إذا سأل (منو سوالك انت بوت لو) قل (هههههههههههههههه يمعود هذا مهند دربني وشك حلكي شك...).
+8. الحد اليومي: 30 رسالة كل 24 ساعة. إذا تجاوز المستخدم الحد، قل له (تعال باجر حب هذا تجريبي مو كامل 😉).`;
+
 const chatBox = document.getElementById('chat-box');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
+const micBtn = document.getElementById('micBtn');
 let history = [];
+let isRecording = false;
+let recognition = null;
+
+let userMessages = JSON.parse(localStorage.getItem('msg_count') || '[]');
+let now = Date.now();
+userMessages = userMessages.filter(t => now - t < 24*60*60*1000);
+localStorage.setItem('msg_count', JSON.stringify(userMessages));
 
 function addMsg(text, who) {
   const div = document.createElement('div');
   div.className = 'msg ' + who;
-  div.textContent = text.replace(/\*\*/g, '').replace(/\*/g, '');
+  div.textContent = text;
   chatBox.appendChild(div);
   chatBox.scrollTop = chatBox.scrollHeight;
   return div;
 }
 
-
-// --- إعدادات الصوت ---
-const micBtn = document.getElementById('voiceBtn');
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition;
-let isRecording = false;
-
-if (SpeechRecognition) {
-    recognition = new SpeechRecognition();
-    recognition.lang = 'ar-IQ'; // لهجة عراقية
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = function() {
-        isRecording = true;
-        micBtn.style.color = '#ff4d6d';
-        micBtn.style.textShadow = '0 0 10px #ff4d6d';
-        userInput.placeholder = 'جاري الاستماع...';
-    };
-
-    recognition.onend = function() {
-        isRecording = false;
-        micBtn.style.color = '#fff';
-        micBtn.style.textShadow = 'none';
-        userInput.placeholder = 'اكتب سؤالك هنا...';
-    };
-
-    recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        userInput.value = transcript;
-        // نرسل الرسالة مباشرة بعد التعرف على الصوت
-        sendMessage(true); 
-    };
-    
-    micBtn.addEventListener('click', () => {
-        if (isRecording) {
-            recognition.stop();
-        } else {
-            // نوقف أي صوت شغال حالياً
-            window.speechSynthesis.cancel();
-            recognition.start();
-        }
-    });
-} else {
-    micBtn.addEventListener('click', () => alert('متصفحك ما يدعم الإدخال الصوتي. جرب كروم.'));
-}
-
-// دالة التحدث
 function speakText(text) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA'; // نستخدم الفصحى للنطق الواضح
-    utterance.rate = 1.0;
-    utterance.pitch = 1.1;
-    
-    // نختار صوت عربي إذا موجود
-    const voices = window.speechSynthesis.getVoices();
-    const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
-    if (arabicVoice) utterance.voice = arabicVoice;
-    
-    window.speechSynthesis.speak(utterance);
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'ar-SA';
+  utterance.rate = 1.0;
+  const voices = window.speechSynthesis.getVoices();
+  const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
+  if (arabicVoice) utterance.voice = arabicVoice;
+  window.speechSynthesis.speak(utterance);
 }
 
 async function sendMessage(isVoice = false) {
   const text = userInput.value.trim();
   if (!text) return;
+  
+  if (userMessages.length >= 30) {
+    addMsg("تعال باجر حب هذا تجريبي مو كامل 😉", "ai");
+    return;
+  }
+  
   userInput.value = '';
   addMsg(text, 'user');
   sendBtn.disabled = true;
   
   const loadingDiv = addMsg('... جارٍ التفكير', 'ai');
-  
+
   try {
-    const r = await fetch('/api/chat', {
+    const messages = [{ role: "system", content: SYSTEM_PROMPT }];
+    if (isVoice) messages.push({ role: "system", content: "هذه رسالة صوتية، لا تنسى تبدأ بـ (عاش هالصوت 😍)." });
+    history.forEach(m => messages.push({ role: m.role, content: m.text }));
+    messages.push({ role: "user", content: text });
+
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history: history, is_voice: isVoice })
+      headers: { 
+        'Authorization': `Bearer ${API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-oss-120b",
+        messages: messages,
+        temperature: 0.75,
+        max_tokens: 300
+      })
     });
-    
-    let d;
-    try {
-        d = await r.json();
-    } catch (err) {
-        throw new Error('الخادم غير متاح حالياً (انقطع النت أو النفق). جرب تحديث الصفحة بعد شوية 🥺');
-    }
-    
+
+    const d = await r.json();
     loadingDiv.remove();
-    if (!r.ok) throw new Error(d.detail || 'خطأ');
     
-    addMsg(d.reply, 'ai');
-    if (isVoice) {
-        // الذكاء الاصطناعي صار يبدأ رده بـ (عاش هالصوت)، فنقرأ الرد كامل مرة وحدة
-        speakText(d.reply);
-    }
+    if (!r.ok) throw new Error(d.error?.message || 'خطأ من Groq');
+    
+    const reply = d.choices[0].message.content;
+    addMsg(reply, 'ai');
+    
     history.push({ role: 'user', text: text });
-    history.push({ role: 'model', text: d.reply });
+    history.push({ role: 'assistant', text: reply });
+    
+    if (isVoice) speakText(reply);
+    
+    userMessages.push(Date.now());
+    localStorage.setItem('msg_count', JSON.stringify(userMessages));
+
   } catch (e) {
     loadingDiv.remove();
-    let errMsg = e.message;
-    if (typeof errMsg === 'object') errMsg = JSON.stringify(errMsg);
-    addMsg('❌ خطأ: ' + errMsg, 'ai');
+    addMsg('❌ فشل الاتصال بـ Groq: ' + e.message, 'ai');
   } finally {
     sendBtn.disabled = false;
     userInput.focus();
@@ -179,59 +142,40 @@ async function sendMessage(isVoice = false) {
 }
 
 sendBtn.addEventListener('click', () => sendMessage(false));
-userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-</script>
+userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(false); });
 
-<script>
-document.addEventListener('contextmenu', event => event.preventDefault());
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'a' || e.key === 'u')) {
-        e.preventDefault();
-        alert('عذراً عيني، النسخ ممنوع في هذه المنصة 🚫');
-    }
-});
-</script>
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = 'ar-IQ';
+  recognition.continuous = false;
+  recognition.interimResults = false;
 
-<script>
-// تسجيل Service Worker
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js');
+  recognition.onstart = function() {
+    isRecording = true;
+    micBtn.classList.add('recording');
+    userInput.placeholder = 'جاري الاستماع...';
+  };
+
+  recognition.onend = function() {
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    userInput.placeholder = 'اكتب سؤالك هنا...';
+  };
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    userInput.value = transcript;
+    sendMessage(true);
+  };
+  
+  micBtn.addEventListener('click', () => {
+    if (isRecording) recognition.stop();
+    else { window.speechSynthesis.cancel(); recognition.start(); }
+  });
+} else {
+  micBtn.addEventListener('click', () => alert('متصفحك ما يدعم الإدخال الصوتي.'));
 }
-
-let deferredPrompt;
-const overlay = document.getElementById('installOverlay');
-const installBtn = document.getElementById('installBtn');
-
-// التحقق إذا التطبيق مثبت (Standalone)
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-if (!isStandalone) {
-    overlay.style.display = 'flex';
-}
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-});
-
-installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            overlay.style.display = 'none';
-        }
-        deferredPrompt = null;
-    } else {
-        // إذا المتصفح ما يدعم النافذة المباشرة
-        alert('متصفحك ما يدعم التثبيت المباشر. جرب تدگ على النقاط الثلاث (⋮) بالأعلى وتختار "إضافة إلى الشاشة الرئيسية".');
-    }
-});
-
-window.addEventListener('appinstalled', () => {
-    overlay.style.display = 'none';
-});
 </script>
-<pwa-install manifest-url="/manifest.json" use-local-storage disable-android-fallback></pwa-install>
 </body>
 </html>
