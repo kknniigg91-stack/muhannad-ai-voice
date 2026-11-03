@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>عقل مهند - مركز التدريب</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Tajawal',sans-serif}
+body{background:radial-gradient(circle at 20% 10%,#1a1230 0%,#0a0a14 45%,#02020a 100%);color:#fff;min-height:100dvh;padding:16px}
+h1{font-size:22px;text-align:center;background:linear-gradient(90deg,#fff,#b8a8ff,#7de8d5);-webkit-background-clip:text;color:transparent;margin-bottom:4px}
+.subtitle{text-align:center;color:#8a8aa0;font-size:13px;margin-bottom:20px}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:16px;margin-bottom:16px;backdrop-filter:blur(10px)}
+h2{font-size:16px;color:#b8a8ff;margin-bottom:12px}
+input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.3);color:#fff;font-family:inherit;font-size:14px;margin-bottom:10px}
+input:focus,textarea:focus{outline:none;border-color:#7c5cff}
+button{background:linear-gradient(135deg,#7c5cff,#5a3ce0);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-weight:bold;cursor:pointer;width:100%;font-family:inherit;font-size:14px;transition:.2s}
+button:active{transform:scale(.97)}
+.stats{display:flex;gap:10px;text-align:center}
+.stat-box{flex:1;background:rgba(255,255,255,.05);border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.1)}
+.stat-box .num{font-size:24px;font-weight:bold;color:#00e5c0}
+.stat-box .lbl{font-size:11px;color:#8a8aa0}
+.training-item{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;margin-bottom:10px;position:relative}
+.training-item .trigger{color:#00e5c0;font-weight:bold;font-size:14px;margin-bottom:4px}
+.training-item .response{color:#e0e0e0;font-size:13px;margin-bottom:8px;line-height:1.5}
+.training-item .meta{font-size:11px;color:#8a8aa0;display:flex;justify-content:space-between;align-items:center}
+.del-btn{background:#ff4d6d;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;width:auto}
+</style>
+</head>
+<body>
+  <h1>🧠 عقل مهند</h1>
+  <p class="subtitle">مركز إدارة وتدريب الشخصية الذكية</p>
+
+  <div class="stats card">
+    <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">إجمالي التدريبات</div></div>
+    <div class="stat-box"><div class="num" id="statActive">0</div><div class="lbl">التدريبات النشطة</div></div>
+  </div>
+
+  <div class="card">
+    <h2>➕ إضافة تدريب جديد</h2>
+    <input type="text" id="trigInput" placeholder="النص المُحفّز (سؤال المستخدم)">
+    <textarea id="respInput" placeholder="رد الذكاء الاصطناعي" rows="3"></textarea>
+    <select id="catInput">
+      <option value="عام">عام</option>
+      <option value="ترحيب">ترحيب</option>
+      <option value="نكتة">نكتة</option>
+      <option value="شخصية">شخصية</option>
+      <option value="غزل">غزل</option>
+    </select>
+    <button onclick="addTraining()">حفظ التدريب</button>
+  </div>
+
+  <div class="card">
+    <h2>📋 التدريبات المحفوظة</h2>
+    <div id="trainingsList"></div>
+  </div>
+
+<script>
+function getTrainings() {
+    return JSON.parse(localStorage.getItem('brain_trainings') || '[]');
+}
+function saveTrainings(data) {
+    localStorage.setItem('brain_trainings', JSON.stringify(data));
+}
+
+function addTraining() {
+    const trig = document.getElementById('trigInput').value.trim();
+    const resp = document.getElementById('respInput').value.trim();
+    const cat = document.getElementById('catInput').value;
+
+    if (!trig || !resp) return alert("الرجاء ملء الحقول!");
+
+    const trainings = getTrainings();
+    trainings.push({
+        id: Date.now(),
+        trigger_text: trig,
+        response_text: resp,
+        category: cat,
+        created_at: new Date().toISOString()
+    });
+    saveTrainings(trainings);
+
+    document.getElementById('trigInput').value = '';
+    document.getElementById('respInput').value = '';
+    renderDashboard();
+}
+
+function deleteTraining(id) {
+    if (!confirm("هل أنت متأكد من حذف هذا التدريب؟")) return;
+    let trainings = getTrainings();
+    trainings = trainings.filter(t => t.id !== id);
+    saveTrainings(trainings);
+    renderDashboard();
+}
+
+function renderDashboard() {
+    const trainings = getTrainings();
+    document.getElementById('statTotal').textContent = trainings.length;
+    document.getElementById('statActive').textContent = trainings.length;
+
+    const list = document.getElementById('trainingsList');
+    if (trainings.length === 0) {
+        list.innerHTML = '<p style="color:#8a8aa0; text-align:center; font-size:13px;">لا توجد تدريبات بعد.</p>';
+        return;
+    }
+
+    list.innerHTML = trainings.reverse().map(t => `
+        <div class="training-item">
+            <div class="trigger">س: ${t.trigger_text}</div>
+            <div class="response">ج: ${t.response_text}</div>
+            <div class="meta">
+                <span>${t.category} • ${new Date(t.created_at).toLocaleDateString('ar')}</span>
+                <button class="del-btn" onclick="deleteTraining(${t.id})">حذف</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// تشغيل اللوحة فوراً بدون مفتاح
+document.addEventListener('DOMContentLoaded', () => {
+    renderDashboard();
+});
+</script>
+</body>
+</html>
