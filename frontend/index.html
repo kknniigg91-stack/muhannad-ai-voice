@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a14">
 <title>محادثة وية مهند</title>
-<!-- Build Version 44 -->
+<!-- Build Version 45 -->
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -225,6 +225,31 @@ async function sendMessage(isVoice) {
     }
 
     // 🤖 3. إذا ما لگينا تدريب، نروح للذكاء الاصطناعي (Groq)
+    // 🔍 فحص إذا الذكاء الاصطناعي مفعل للمستخدم
+    let aiEnabled = true;
+    try {
+        const settingRes = await fetch(`${WORKER_URL}/db/user_settings?username=eq.${encodeURIComponent(userName || 'زائر')}`, { headers: { 'Content-Type': 'application/json' } });
+        const settings = await settingRes.json();
+        if (settings.length > 0 && settings[0].ai_enabled === false) {
+            aiEnabled = false;
+        }
+    } catch(e) { console.log('Settings check error:', e); }
+
+    if (!aiEnabled) {
+        loadingDiv.remove();
+        // نخزن رسالة المستخدم بس، ولا نرسل للذكاء
+        try {
+            fetch(WORKER_URL + '/db/chats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: userName || 'زائر', role: 'user', message: text })
+            });
+        } catch(e) {}
+        sendBtn.disabled = false;
+        userInput.focus();
+        return; // نوقف هنا
+    }
+
     const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
     messages.push({ role: 'system', content: 'المستخدم اسمه ' + userName + ' وهو ' + (userGender === 'female' ? 'أنثى' : 'ذكر') + '. خاطبه بالضمير المناسب.' });
     if (isVoice) messages.push({ role: 'system', content: 'هذه رسالة صوتية، ابدأ بـ (عاش هالصوت 😍).' });

@@ -39,7 +39,14 @@ button:active{transform:scale(.97)}
 .admin-input-area{display:flex;gap:8px;margin-top:12px;}
 .admin-input-area input{margin-bottom:0;}
 .admin-input-area button{width:auto;padding:10px 16px;}
+
+.user-item-actions { display: flex; gap: 6px; align-items: center; }
+.action-btn { padding: 6px 10px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.2s; }
+.btn-toggle-on { background: rgba(0, 229, 192, 0.15); color: #00e5c0; border: 1px solid rgba(0,229,192,0.3); }
+.btn-toggle-off { background: rgba(255, 184, 77, 0.15); color: #ffb84d; border: 1px solid rgba(255,184,77,0.3); }
+.btn-delete { background: rgba(255, 77, 109, 0.15); color: #ff4d6d; border: 1px solid rgba(255,77,109,0.3); }
 </style>
+
 </head>
 <body>
   <h1>🧠 عقل مهند</h1>
@@ -156,6 +163,45 @@ async function deleteTraining(id) {
 }
 
 // ================= المراقبة (من قاعدة البيانات) =================
+
+async function toggleAI(username, currentlyEnabled) {
+    const newState = !currentlyEnabled;
+    try {
+        // نحاول نحدث، إذا ماكو نتيجة، نضيف سجل جديد
+        const res = await fetch(`${WORKER_URL}/db/user_settings?username=eq.${encodeURIComponent(username)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ai_enabled: newState })
+        });
+        const data = await res.json();
+        
+        if (data.length === 0) {
+            await fetch(`${WORKER_URL}/db/user_settings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, ai_enabled: newState })
+            });
+        }
+        loadUsers(true); // تحديث صامت للقائمة
+    } catch(e) {
+        alert("فشل تغيير الحالة: " + e.message);
+    }
+}
+
+async function deleteUser(username) {
+    if (!confirm(`هل أنت متأكد من حذف جميع محادثات وإعدادات المستخدم (${username})؟`)) return;
+    try {
+        await fetch(`${WORKER_URL}/db/chats?username=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
+        await fetch(`${WORKER_URL}/db/user_settings?username=eq.${encodeURIComponent(username)}`, { method: 'DELETE' });
+        
+        document.getElementById('chatViewerCard').style.display = 'none';
+        activeChatUsername = null;
+        loadUsers(true);
+    } catch(e) {
+        alert("فشل الحذف: " + e.message);
+    }
+}
+
 async function loadUsers(isSilent = false) {
     const list = document.getElementById('usersList');
     if (!isSilent) list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ تحميل المستخدمين...</p>';
@@ -165,6 +211,14 @@ async function loadUsers(isSilent = false) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         
+        // نجيب إعدادات الذكاء الاصطناعي
+        const settingsRes = await fetch(`${WORKER_URL}/db/user_settings?select=*`, { headers: { 'Content-Type': 'application/json' } });
+        const settingsData = await settingsRes.json();
+        const settingsMap = {};
+        if (Array.isArray(settingsData)) {
+            settingsData.forEach(s => settingsMap[s.username] = s.ai_enabled);
+        }
+
         allChatsCache = data;
 
         const uniqueUsers = {};
@@ -182,12 +236,22 @@ async function loadUsers(isSilent = false) {
             return;
         }
         
-        list.innerHTML = usersArray.map(u => `
-            <div class="user-item" onclick="loadUserChats('${u.username}', this)">
-                <div><strong style="color:#00e5c0;">👤 ${u.username}</strong><div style="font-size:11px; color:#8a8aa0; margin-top:4px;">آخر ظهور: ${new Date(u.last_seen).toLocaleString('ar-IQ')}</div></div>
-                <span style="background:rgba(124,92,255,.2); padding:4px 8px; border-radius:10px; font-size:12px;">${u.count} رسالة</span>
+        list.innerHTML = usersArray.map(u => {
+            const isEnabled = settingsMap[u.username] !== false;
+            return `
+            <div class="user-item">
+                <div style="flex:1; cursor:pointer;" onclick="loadUserChats('${u.username}', this)">
+                    <strong style="color:#00e5c0;">👤 ${u.username}</strong>
+                    <div style="font-size:11px; color:#8a8aa0; margin-top:4px;">آخر ظهور: ${new Date(u.last_seen).toLocaleString('ar-IQ')}</div>
+                </div>
+                <div class="user-item-actions">
+                    <button class="action-btn ${isEnabled ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="toggleAI('${u.username}', ${isEnabled})" title="${isEnabled ? 'إيقاف ردود الذكاء' : 'تشغيل ردود الذكاء'}">
+                        ${isEnabled ? '⏸️' : '▶️'}
+                    </button>
+                    <button class="action-btn btn-delete" onclick="deleteUser('${u.username}')" title="حذف المستخدم والمحادثة">🗑️</button>
+                </div>
             </div>
-        `).join('');
+        `}).join('');
     } catch (e) {
         list.innerHTML = '<p style="color:#ff4d6d; text-align:center;">فشل الاتصال: ' + e.message + '</p>';
     }
