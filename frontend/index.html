@@ -25,8 +25,21 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </style>
 <link rel="manifest" href="manifest.json">
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+
+<style>
+#nameModal { position:fixed; inset:0; background:#0a0a14; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center; }
+#nameModal h2 { color:#b8a8ff; margin-bottom:20px; font-size:24px; }
+#nameModal input { width:100%; max-width:300px; padding:14px; border-radius:12px; border:1px solid #7c5cff; background:rgba(255,255,255,0.05); color:#fff; font-size:16px; text-align:center; outline:none; margin-bottom:20px; font-family:inherit; }
+#nameModal button { background:linear-gradient(135deg,#7c5cff,#5a3ce0); color:#fff; border:none; padding:14px 40px; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; box-shadow:0 4px 15px rgba(124,92,255,.4); }
+</style>
 </head>
 <body>
+<div id="nameModal" style="display:none;">
+  <h2>أهلاً بيك في محادثة وية مهند 👋</h2>
+  <input type="text" id="userNameInput" placeholder="اكتب اسمك هنا..." autocomplete="off">
+  <button onclick="saveName()">دخول</button>
+</div>
+
   <h1>💬 محادثة وية مهند</h1>
   <p class="note">🎙️ ملاحظة: الصوت حاليا متوقف بعدين اسوي مجال ماكو 🥰</p>
   <div id="chat-box">
@@ -106,6 +119,9 @@ async function sendMessage(isVoice = false) {
     const messages = [{ role: "system", content: SYSTEM_PROMPT }];
     if (isVoice) messages.push({ role: "system", content: "هذه رسالة صوتية، لا تنسى تبدأ بـ (عاش هالصوت 😍)." });
     history.forEach(m => messages.push({ role: m.role, content: m.text }));
+    if (userName) {
+        messages.push({ role: "system", content: `المستخدم الذي تتحدث معه اسمه (${userName}) وهو (${userGender === 'female' ? 'أنثى' : 'ذكر'}). خاطبه باسمه واستخدم الضمائر المناسبة.` });
+    }
     messages.push({ role: "user", content: text });
 
     const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -184,6 +200,49 @@ if (SpeechRecognition) {
   });
 } else {
   micBtn.addEventListener('click', () => alert('متصفحك ما يدعم الإدخال الصوتي.'));
+}
+</script>
+
+<script>
+let userName = localStorage.getItem('user_name');
+let userGender = localStorage.getItem('user_gender');
+const nameModal = document.getElementById('nameModal');
+
+function guessGender(name) {
+    if (!name) return 'male';
+    const femaleEndings = ['ة', 'ه', 'ا', 'ى', 'اء', 'يا', 'و'];
+    const femaleNames = ['سارة', 'نور', 'زينب', 'فاطمة', 'مريم', 'حوراء', 'رجاء', 'هدى', 'سجى', 'دعاء', 'آية', 'رنا', 'ريم', 'لمى', 'ليلى', 'سلمى', 'دينا', 'رغد', 'شهد', 'اخلاص', 'آمنة', 'زهراء', 'بنين'];
+    if (femaleNames.includes(name.trim())) return 'female';
+    const lastChar = name.trim().slice(-1);
+    return femaleEndings.includes(lastChar) ? 'female' : 'male';
+}
+
+function saveName() {
+    const name = document.getElementById('userNameInput').value.trim();
+    if (!name) return alert('اكتب اسمك حبيبي 🥺');
+    localStorage.setItem('user_name', name);
+    const gender = guessGender(name);
+    localStorage.setItem('user_gender', gender);
+    userName = name;
+    userGender = gender;
+    nameModal.style.display = 'none';
+    chatBox.innerHTML = '';
+    let greeting = (gender === 'female') 
+        ? `هلا 👋 والله ${name} شلونج شكو ماكو ؟`
+        : `هلا والله 👋 ${name} شلونك شكو ماكو ؟`;
+    addMsg(greeting, 'ai');
+}
+
+if (!userName) {
+    nameModal.style.display = 'flex';
+    document.getElementById('chat-box').innerHTML = '';
+} else {
+    nameModal.style.display = 'none';
+    let greeting = (userGender === 'female') 
+        ? `هلا 👋 والله ${userName} شلونج شكو ماكو ؟`
+        : `هلا والله 👋 ${userName} شلونك شكو ماكو ؟`;
+    document.getElementById('chat-box').innerHTML = '';
+    addMsg(greeting, 'ai');
 }
 </script>
 </body>
