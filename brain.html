@@ -23,7 +23,7 @@ button:active{transform:scale(.97)}
 .stat-box{flex:1;background:rgba(255,255,255,.05);border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.1)}
 .stat-box .num{font-size:24px;font-weight:bold;color:#00e5c0}
 .stat-box .lbl{font-size:11px;color:#8a8aa0}
-.training-item{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;margin-bottom:10px;position:relative}
+.training-item{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;margin-bottom:10px}
 .training-item .trigger{color:#00e5c0;font-weight:bold;font-size:14px;margin-bottom:4px}
 .training-item .response{color:#e0e0e0;font-size:13px;margin-bottom:8px;line-height:1.5}
 .training-item .meta{font-size:11px;color:#8a8aa0;display:flex;justify-content:space-between;align-items:center}
@@ -35,7 +35,7 @@ button:active{transform:scale(.97)}
 .chat-bubble.user{align-self:flex-start;background:rgba(124,92,255,.2);border:1px solid rgba(124,92,255,.3);color:#e6dfff;margin-right:auto}
 .chat-bubble.ai{align-self:flex-end;background:rgba(0,229,192,.1);border:1px solid rgba(0,229,192,.3);color:#d4fff6;margin-left:auto}
 .chat-time{font-size:10px;color:#8a8aa0;margin-top:4px;text-align:left}
-#chatViewer{display:none;flex-direction:column;gap:8px;margin-top:10px}
+#chatViewer{display:none;flex-direction:column;gap:8px;margin-top:10px;min-height:100px;}
 </style>
 </head>
 <body>
@@ -78,9 +78,9 @@ button:active{transform:scale(.97)}
   </div>
 
 <script>
-// مسار العقل (Cloudflare Worker) لتجاوز الحظر
+// رابط العقل (Cloudflare Worker)
 const WORKER_URL = "https://muhannad-brain-v2.kknniigg91.workers.dev";
-let allChatsCache = [];
+let allChatsCache = []; // ذاكرة مؤقتة لحفظ كل المحادثات
 
 function switchTab(tabName, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -89,6 +89,7 @@ function switchTab(tabName, btn) {
     document.getElementById('tab-monitoring').style.display = tabName === 'monitoring' ? 'block' : 'none';
 }
 
+// ================= نظام التدريبات =================
 function getTrainings() { return JSON.parse(localStorage.getItem('brain_trainings') || '[]'); }
 function saveTrainings(data) { localStorage.setItem('brain_trainings', JSON.stringify(data)); }
 
@@ -131,6 +132,7 @@ function renderDashboard() {
     `).join('');
 }
 
+// ================= نظام المراقبة =================
 async function loadUsers() {
     const list = document.getElementById('usersList');
     list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ تحميل المستخدمين...</p>';
@@ -143,6 +145,10 @@ async function loadUsers() {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         
+        // تخزين كل المحادثات بالذاكرة
+        allChatsCache = data;
+
+        // استخراج أسماء المستخدمين الفريدة
         const uniqueUsers = {};
         data.forEach(chat => {
             if (!uniqueUsers[chat.username]) {
@@ -172,7 +178,7 @@ async function loadUsers() {
 function loadUserChats(username, element) {
     document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
-
+    
     const viewerCard = document.getElementById('chatViewerCard');
     const viewer = document.getElementById('chatViewer');
     const title = document.getElementById('chatViewerTitle');
@@ -182,10 +188,12 @@ function loadUserChats(username, element) {
     viewerCard.scrollIntoView({ behavior: 'smooth' });
 
     // نفلتر المحادثات من الذاكرة مباشرة (بدون طلب جديد)
-    const userChats = allChatsCache.filter(c => c.username === username).sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    const userChats = allChatsCache
+        .filter(c => c.username === username)
+        .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
     
     if (userChats.length === 0) {
-        viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا توجد محادثات.</p>';
+        viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا توجد محادثات محفوظة.</p>';
         return;
     }
     
