@@ -23,6 +23,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 #micBtn{background:transparent;font-size:22px;padding:0 10px;color:#fff}
 #micBtn.recording{color:#ff4d6d;text-shadow:0 0 10px #ff4d6d;}
 </style>
+<link rel="manifest" href="manifest.json">
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
 </head>
 <body>
   <h1>💬 محادثة وية مهند</h1>
@@ -50,7 +52,7 @@ const SYSTEM_PROMPT = `أنت شخصية "مهند"، رجل عراقي ذكي �
 6. استخدم غزل خفيف وحب خفيف (مثل: يا بعد روحي، فدوة لعيونك) بشكل طبيعي وعفوي، مو بكل رد.
 7. ممنوع استخدام الرموز مثل (**) أو (*).
 8. إذا كان السؤال صوتي، ابدأ بـ (عاش هالصوت 😍).
-9. الحد اليومي: 10 رسائل كل 24 ساعة.`;
+9. الحد اليومي: 100 رسالة كل 24 ساعة.`;
 
 const chatBox = document.getElementById('chat-box');
 const userInput = document.getElementById('userInput');
@@ -90,7 +92,7 @@ async function sendMessage(isVoice = false) {
   if (!text) return;
   
   if (userMessages.length >= 30) {
-    addMsg("تعال باجر حب هذا تجريبي مو كامل 😉", "ai");
+    addMsg("تعال باجر حبيبي خلصت فلوسك 😆", "ai");
     return;
   }
   
