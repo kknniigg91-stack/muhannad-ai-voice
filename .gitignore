@@ -6,7 +6,6 @@ __pycache__/
 
 # Private runtime data
 .env
-backend/.env
 backend/brain.db
 backend/server.log
 backend/server.pid
