@@ -26,6 +26,7 @@ button:active{transform:scale(.97)}
 .training-item .meta{font-size:11px;color:#8a8aa0;display:flex;justify-content:space-between;align-items:center}
 .del-btn{background:#ff4d6d;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;width:auto}
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <h1>🧠 عقل مهند</h1>
@@ -53,6 +54,13 @@ button:active{transform:scale(.97)}
   <div class="card">
     <h2>📋 التدريبات المحفوظة</h2>
     <div id="trainingsList"></div>
+  </div>
+
+
+  <div class="card" id="monitorCard">
+    <h2>👁️ المراقبة (سجل المحادثات)</h2>
+    <button onclick="loadMonitoring()" style="margin-bottom:10px; background:linear-gradient(135deg,#00e5c0,#00a085); color:#001a15;">🔄 تحديث السجل</button>
+    <div id="monitorList" style="max-height: 300px; overflow-y: auto;"></div>
   </div>
 
 <script>
