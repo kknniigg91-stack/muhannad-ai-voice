@@ -72,7 +72,7 @@ window.addEventListener('appinstalled', () => {
   
   <button id="installBtn" style="display:none; margin: 0 auto 10px auto; background: linear-gradient(135deg,#00c4a3,#00a085); color:#fff; border:none; border-radius:20px; padding:8px 18px; font-weight:bold; font-family:inherit; cursor:pointer; box-shadow:0 4px 10px rgba(0,196,163,0.3); font-size:14px;">📲 تثبيت التطبيق</button>
 
-  <p class="note">🎙️ ملاحظة: الصوت حاليا متوقف بعدين اسوي مجال ماكو 🥰</p>
+  <p class="note">🎙️ ملاحظة: الصوت مفعل حالياً بصوت مهند 🥰</p>
   <div id="chat-box">
     <div class="msg ai">هلا حب 💘 شلونك شكو ماكو</div>
   </div>
@@ -120,15 +120,36 @@ function addMsg(text, who) {
   return div;
 }
 
-function speakText(text) {
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'ar-SA';
-  utterance.rate = 1.0;
-  const voices = window.speechSynthesis.getVoices();
-  const arabicVoice = voices.find(v => v.lang.startsWith('ar'));
-  if (arabicVoice) utterance.voice = arabicVoice;
-  window.speechSynthesis.speak(utterance);
+
+async function speakText(text) {
+  try {
+    const r = await fetch("https://api.fish.audio/v1/tts", {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer sk-fish-3yi4hHVra26xr292ktj4fh9ILZ4aFog72gMRR-DNkoI',
+        'Content-Type': 'application/json',
+        'model': 's2.1-pro-free'
+      },
+      body: JSON.stringify({
+        text: text,
+        reference_id: '90e65eaaf50e4470b8e6d43ee6afd7d5',
+        format: 'mp3'
+      })
+    });
+    if (!r.ok) throw new Error('TTS Failed: ' + r.status);
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.play();
+  } catch (e) {
+    console.error('Fish Audio Error:', e);
+    // خطة بديلة: استخدام صوت المتصفح
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ar-SA';
+    utterance.rate = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
 }
 
 async function sendMessage(isVoice = false) {
@@ -183,7 +204,7 @@ async function sendMessage(isVoice = false) {
     history.push({ role: 'user', text: text });
     history.push({ role: 'assistant', text: reply });
     
-    if (isVoice) speakText(reply);
+    speakText(reply);
     
     userMessages.push(Date.now());
     localStorage.setItem('msg_count', JSON.stringify(userMessages));
