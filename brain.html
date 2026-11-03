@@ -73,7 +73,7 @@ button:active{transform:scale(.97)}
   <div id="tab-monitoring" style="display:none;">
     <div class="card">
       <h2>👥 المستخدمين (الذين تحدثوا مع مهند)</h2>
-      <button onclick="loadUsers()" style="margin-bottom:10px; background:linear-gradient(135deg,#00e5c0,#00a085); color:#001a15;">🔄 تحديث قائمة المستخدمين</button>
+      <p style="color:#00e5c0; font-size:12px; text-align:center; margin-bottom:10px;">🟢 التحديث لحظي تلقائي...</p>
       <div id="usersList"><p style="color:#8a8aa0; text-align:center; font-size:13px;">اضغط على تحديث لجلب الأسماء...</p></div>
     </div>
     
@@ -156,9 +156,9 @@ async function deleteTraining(id) {
 }
 
 // ================= المراقبة (من قاعدة البيانات) =================
-async function loadUsers() {
+async function loadUsers(isSilent = false) {
     const list = document.getElementById('usersList');
-    list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ تحميل المستخدمين...</p>';
+    if (!isSilent) list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ تحميل المستخدمين...</p>';
     
     try {
         const res = await fetch(`${WORKER_URL}/db/chats?select=*&order=created_at.desc`, { headers: { 'Content-Type': 'application/json' } });
@@ -193,19 +193,20 @@ async function loadUsers() {
     }
 }
 
-function renderChatMessages(userChats) {
+function renderChatMessages(userChats, isSilent = false) {
     const viewer = document.getElementById('chatViewer');
     if (userChats.length === 0) {
         viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا توجد محادثات محفوظة.</p>';
         return;
     }
+    const wasAtBottom = viewer.scrollHeight - viewer.scrollTop <= viewer.clientHeight + 50;
     viewer.innerHTML = userChats.map(chat => `
         <div class="chat-bubble ${chat.role === 'user' ? 'user' : 'ai'}">
             ${chat.message}
             <div class="chat-time">${new Date(chat.created_at).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})}</div>
         </div>
     `).join('');
-    viewer.scrollTop = viewer.scrollHeight;
+    if (!isSilent || wasAtBottom) { viewer.scrollTop = viewer.scrollHeight; }
 }
 
 function loadUserChats(username, element) {
@@ -265,7 +266,30 @@ async function adminSendReply() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => { loadTrainings(); });
+
+// ================= نظام التحديث اللحظي =================
+let autoRefreshTimer = null;
+
+function startAutoRefresh() {
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(() => {
+        loadUsers(true); // true = تحديث صامت
+        if (activeChatUsername) {
+            fetchActiveChats(); // تحديث المحادثة المفتوحة
+        }
+    }, 4000); // كل 4 ثواني
+}
+
+async function fetchActiveChats() {
+    if (!activeChatUsername) return;
+    try {
+        const res = await fetch(`${WORKER_URL}/db/chats?username=eq.${encodeURIComponent(activeChatUsername)}&order=created_at.asc`, { headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        renderChatMessages(data, true); // true = تحديث بدون ما ننزل لتحت
+    } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', () => { loadTrainings(); loadUsers(); startAutoRefresh(); });
 </script>
 </body>
 </html>
