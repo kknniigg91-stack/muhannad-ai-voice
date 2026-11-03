@@ -3,3 +3,17 @@ backend/samples/*
 __pycache__/
 *.pyc
 .env
+
+# Private runtime data
+.env
+backend/.env
+backend/brain.db
+backend/server.log
+backend/server.pid
+backend/samples/*
+!backend/samples/.gitkeep
+*.backup*
+backup*/
+training-check.js
+__pycache__/
+*.pyc

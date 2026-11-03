@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
+from brain import record_activity, is_ip_blocked
 
 router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent
@@ -33,6 +34,7 @@ class ChatRequest(BaseModel):
     message: str
     history: list = []
     is_voice: bool = False
+    username: str
 
 SYSTEM_PROMPT = """
 أنت شخصية ذكاء اصطناعي اسمك "مهند AI".
@@ -61,7 +63,20 @@ SYSTEM_PROMPT = """
 
 @router.post("/api/chat")
 async def chat(req: ChatRequest, request: Request):
-    client_ip = request.client.host
+    peer_ip = request.client.host if request.client else "غير معروف"
+    cf_ip = request.headers.get("CF-Connecting-IP", "").strip()
+    client_ip = peer_ip
+    # نثق بعنوان Cloudflare فقط إذا كان الاتصال المحلي من cloudflared
+    if peer_ip in ("127.0.0.1", "::1") and cf_ip:
+        import ipaddress
+        try:
+            client_ip = str(ipaddress.ip_address(cf_ip))
+        except ValueError:
+            pass
+    username = str(req.username or "زائر").strip()[:60] or "زائر"
+    if is_ip_blocked(client_ip):
+        raise HTTPException(403, "تم إيقاف الوصول لهذا الاتصال")
+    record_activity(username, client_ip, req.message, "user")
     now = time.time()
     
     # التحقق من الحد اليومي
@@ -106,6 +121,8 @@ async def chat(req: ChatRequest, request: Request):
     except (KeyError, IndexError):
         reply_text = "عذراً، لم أتمكن من توليد رد."
         
+    record_activity(username, client_ip, reply_text, "assistant")
+
     audio_url = None
     audio_error = None
 

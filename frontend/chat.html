@@ -37,6 +37,15 @@ button:active{transform:scale(.95)}
 <script type="module" src="https://unpkg.com/@khmyznikov/pwa-install@0.7.0/dist/esm/pwa-install.js"></script>
 </head>
 <body>
+<div id="nameGate" style="position:fixed;inset:0;background:#0a0a14;z-index:10000;display:flex;align-items:center;justify-content:center;padding:22px">
+ <div style="width:min(420px,100%);background:#151526;border:1px solid #39304f;border-radius:20px;padding:24px;text-align:center">
+  <h2 style="color:#b8a8ff">قبل لا نبدي نتعارف 💜</h2>
+  <p style="color:#aaa;font-size:13px;line-height:1.8">اكتب اسمك حتى يظهر في سجل المحادثات لدى إدارة المنصة. الرسائل التي ترسلها وردود الذكاء الاصطناعي تُحفظ لأغراض إدارة المنصة.</p>
+  <input id="visitorName" maxlength="60" placeholder="اكتب اسمك هنا" autocomplete="name" style="width:100%;padding:14px;border-radius:10px;border:1px solid #51466e;background:#0a0a14;color:white;font:inherit;box-sizing:border-box">
+  <button id="enterChat" style="margin-top:14px;width:100%">دخول المحادثة</button>
+  <p id="nameError" style="color:#ff8585;font-size:12px"></p>
+ </div>
+</div>
 <div id="installOverlay" style="display:none; position:fixed; inset:0; background:#0a0a14; z-index:9999; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center;">
     <h2 style="color:#b8a8ff; margin-bottom:20px; font-size:22px;">لتجربة أحلى، ثبت التطبيق 📱</h2>
     <p style="color:#8a8aa0; margin-bottom:30px; line-height:1.6;">علمود نكدر نسولف سوا، لازم تثبت المنصة كتطبيق على شاشة هاتفك 🥰</p>
@@ -45,6 +54,7 @@ button:active{transform:scale(.95)}
 </div>
 
   <h1>💬 محادثة وية مهند</h1>
+<p style="font-size:11px;color:#9a91b5;text-align:center;margin:0 0 8px">تنبيه خصوصية: اسمك ورسائلك وردود المنصة تُحفظ وتظهر لإدارة المنصة.</p>
 <p style="font-size:12px; color:#b8a8ff; margin-top:5px;">🎙️ ملاحظة: الصوت حاليا متوقف بعدين اسوي مجال ماكو 🥰</p>
   <div id="chat-box">
     <div class="msg ai">هلا حب 💘 شلونك شكو ماكو</div>
@@ -57,6 +67,21 @@ button:active{transform:scale(.95)}
   <a href="/" class="back">← رجوع للرئيسية</a>
 
 <script>
+
+let username = localStorage.getItem('muhannad_chat_username') || '';
+const nameGate = document.getElementById('nameGate');
+const nameInput = document.getElementById('visitorName');
+function enterWithName(){
+ const value = nameInput.value.trim();
+ if(value.length < 2){document.getElementById('nameError').textContent='اكتب اسم من حرفين أو أكثر.';return;}
+ username = value.slice(0,60);
+ localStorage.setItem('muhannad_chat_username', username);
+ nameGate.style.display='none';
+}
+document.getElementById('enterChat').addEventListener('click', enterWithName);
+nameInput.addEventListener('keydown', e=>{if(e.key==='Enter')enterWithName();});
+if(username){nameGate.style.display='none';}
+
 const chatBox = document.getElementById('chat-box');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -147,7 +172,7 @@ async function sendMessage(isVoice = false) {
     const r = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, history: history, is_voice: isVoice })
+      body: JSON.stringify({ message: text, history: history, is_voice: isVoice, username: username })
     });
     
     let d;

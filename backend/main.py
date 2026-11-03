@@ -25,6 +25,8 @@ import voice_clone
 import ai_chat
 app.include_router(voice_clone.router)
 app.include_router(ai_chat.router)
+import brain
+app.include_router(brain.router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>عقل مهند | مركز التدريب</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121e30;--line:#26364c;--gold:#f0d28a;--muted:#9aabc0;--green:#39c99a;--red:#f07878}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#183047 0,#0b1220 55%);color:#edf3fa;font-family:system-ui,Tahoma,Arial;min-height:100vh;padding:22px}
+main{max-width:950px;margin:auto}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+h1{font-size:25px;margin:0;color:var(--gold)}.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.panel{background:#121e30eF;border:1px solid var(--line);border-radius:17px;padding:18px;margin:14px 0;box-shadow:0 12px 35px #0003}
+h2{font-size:17px;margin:0 0 14px;color:var(--gold)}
+input,textarea,select{width:100%;background:#0b1524;color:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--gold)}
+textarea{min-height:115px;resize:vertical}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 6px}
+button{border:0;border-radius:10px;padding:11px 16px;background:var(--gold);color:#17202b;font-weight:700;font-size:14px;cursor:pointer}
+button.secondary{background:#26364c;color:#edf3fa}button.danger{background:#512b35;color:#ffdede}
+button:disabled{opacity:.5;cursor:wait}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.stats{display:flex;gap:10px;flex-wrap:wrap}.stat{background:#0b1524;border:1px solid var(--line);padding:13px 18px;border-radius:12px;min-width:130px;flex:1}
+.stat b{display:block;color:var(--gold);font-size:24px}.stat span{color:var(--muted);font-size:12px}
+.entry{border:1px solid var(--line);background:#0d1929;border-radius:12px;padding:14px;margin-top:10px}
+.entry h3{margin:0 0 8px;font-size:16px}.entry p{white-space:pre-wrap;overflow-wrap:anywhere;color:#d3deea;margin:7px 0}
+.meta{font-size:12px;color:var(--muted)}.notice{font-size:13px;color:var(--muted);margin-top:10px;min-height:20px}
+.ok{color:var(--green)}.err{color:var(--red)}.hidden{display:none}
+@media(max-width:600px){body{padding:13px}.grid{grid-template-columns:1fr}.panel{padding:14px}h1{font-size:21px}}
+</style>
+</head>
+<body>
+<main>
+<header class="head">
+ <div><h1>عقل مهند</h1><div class="sub">مركز إدارة وتدريب الشخصية الذكية</div></div>
+ <button class="secondary" id="refresh">تحديث البيانات</button>
+</header>
+
+<section class="panel">
+ <h2>الدخول إلى مركز التدريب</h2>
+ <label for="key">مفتاح الإدارة</label>
+ <input id="key" type="password" autocomplete="off" placeholder="أدخل مفتاح الإدارة الموجود في backend/.env">
+ <div class="actions"><button id="connect">اتصال</button><button class="secondary" id="disconnect">مسح المفتاح</button></div>
+ <div id="status" class="notice">أدخل المفتاح للاتصال بقاعدة التدريب.</div>
+</section>
+
+<div id="workspace" class="hidden">
+ <section class="panel">
+  <h2>إحصائيات التدريب</h2>
+  <div class="stats">
+   <div class="stat"><b id="total">—</b><span>إجمالي التدريبات</span></div>
+   <div class="stat"><b id="active">—</b><span>التدريبات المفعلة</span></div>
+  </div>
+ </section>
+
+ 
+<section class="panel" id="monitorPanel">
+  <h2>المستخدمون والمحادثات</h2>
+  <div class="actions"><button class="secondary" id="usersRefresh">تحديث المستخدمين</button></div>
+  <div id="usersList"><p class="notice">جاري تحميل المستخدمين...</p></div>
+  <div id="conversationPanel" class="hidden">
+    <h2 id="conversationTitle">المحادثة</h2>
+    <div id="conversationMessages"></div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2 id="formTitle">إضافة تدريب جديد</h2>
+  <input type="hidden" id="entryId">
+  <label for="trigger">السؤال أو العبارة التي يتعرف عليها عقل مهند</label>
+  <textarea id="trigger" maxlength="2000" placeholder="مثال: شلون أكسب قلب إنسانة عنيدة؟"></textarea>
+  <label for="response">الجواب أو الأسلوب الذي تريد تدريبه عليه</label>
+  <textarea id="response" maxlength="10000" placeholder="اكتب الرد باللهجة العراقية وبالأسلوب المطلوب..."></textarea>
+  <div class="grid">
+   <div><label for="category">التصنيف</label><input id="category" maxlength="100" value="عام" placeholder="غزل، عمل، مواقف..."></div>
+   <div><label for="mode">طريقة الرد</label>
+    <select id="mode"><option value="hybrid">هجين — مرن وقريب من النص</option><option value="literal">حرفي — نفس الرد المسجل</option></select>
+   </div>
+  </div>
+  <div class="actions"><button id="save">حفظ التدريب</button><button class="secondary" id="cancel">إلغاء التعديل</button></div>
+  <div id="formStatus" class="notice"></div>
+ </section>
+
+ <section class="panel">
+  <h2>سجل التدريبات</h2>
+  <input id="filter" placeholder="ابحث في الأسئلة والأجوبة والتصنيفات...">
+  <div id="entries"><p class="notice">جاري تحميل التدريبات...</p></div>
+ </section>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let entries=[];
+const key=()=> $('key').value.trim();
+async function api(path,options={}){
+ const headers={'X-Admin-Key':key(),...(options.body?{'Content-Type':'application/json'}:{}),...(options.headers||{})};
+ const r=await fetch('/api/brain'+path,{...options,headers});
+ let data={};try{data=await r.json()}catch{}
+ if(!r.ok)throw Error(data.detail||('HTTP '+r.status));
+ return data;
+}
+function message(id,text,ok=false){$(id).textContent=text;$(id).className='notice '+(ok?'ok':'err')}
+async function load(){
+ const [list,stats]=await Promise.all([api('/train'),api('/stats')]);
+ entries=list.items||[];
+ $('total').textContent=stats.total;
+ $('active').textContent=stats.active;
+ render();
+    await loadUsers();
+}
+
+async function loadUsers(){
+  const data = await api('/users');
+  renderUsers(data.items || []);
+}
+function renderUsers(items){
+  const root = $('usersList');
+  root.replaceChildren();
+  if(!items.length){
+    const empty=document.createElement('p');
+    empty.className='notice';
+    empty.textContent='لا يوجد مستخدمون مسجلون حتى الآن.';
+    root.append(empty);
+    return;
+  }
+  for(const u of items){
+    const card=document.createElement('article');
+    card.className='entry';
+    const title=document.createElement('h3');
+    title.textContent=u.username || 'زائر';
+    const meta=document.createElement('p');
+    meta.className='meta';
+    meta.textContent=`IP: ${u.ip} · الرسائل: ${u.messages} · آخر ظهور: ${u.last_seen || '—'} · ${u.blocked?'محظور':'نشط'}`;
+    const actions=document.createElement('div');
+    actions.className='actions';
+    const open=document.createElement('button');
+    open.textContent='عرض المحادثة كاملة';
+    open.onclick=()=>showConversation(u);
+    const block=document.createElement('button');
+    block.className='danger';
+    block.textContent=u.blocked?'إلغاء الحظر':'حظر IP';
+    block.onclick=()=>changeBlock(u);
+    actions.append(open,block);
+    card.append(title,meta,actions);
+    root.append(card);
+  }
+}
+async function showConversation(u){
+  const box=$('conversationPanel');
+  const list=$('conversationMessages');
+  $('conversationTitle').textContent=`محادثة ${u.username} — ${u.ip}`;
+  list.replaceChildren();
+  box.classList.remove('hidden');
+  const data=await api('/activity?ip='+encodeURIComponent(u.ip)+'&username='+encodeURIComponent(u.username));
+  for(const m of (data.items||[])){
+    const article=document.createElement('article');
+    article.className='entry';
+    const title=document.createElement('h3');
+    title.textContent=m.role==='assistant'?'رد عقل مهند':'رسالة المستخدم';
+    const body=document.createElement('p');
+    body.textContent=m.message || '';
+    const time=document.createElement('small');
+    time.className='meta';
+    time.textContent=m.created_at || '';
+    article.append(title,body,time);
+    list.append(article);
+  }
+  if(!data.items || !data.items.length){
+    const empty=document.createElement('p');
+    empty.className='notice';
+    empty.textContent='لا توجد رسائل محفوظة لهذا المستخدم.';
+    list.append(empty);
+  }
+  box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function changeBlock(u){
+  try{
+    const route=u.blocked?'/unblock':'/block';
+    await api(route,{method:'POST',body:JSON.stringify({ip:u.ip,note:'إدارة المنصة'})});
+    await loadUsers();
+    message('formStatus',u.blocked?'تم إلغاء الحظر.':'تم حظر عنوان IP.',true);
+  }catch(e){message('formStatus',e.message)}
+}
+
+function render(){
+ const q=$('filter').value.trim().toLowerCase();
+ const shown=entries.filter(e=>[e.trigger_text,e.response_text,e.category].join(' ').toLowerCase().includes(q));
+ $('entries').innerHTML=shown.length?'':'<p class="notice">لا توجد تدريبات مطابقة.</p>';
+ for(const e of shown){
+  const article=document.createElement('article');article.className='entry';
+  const title=document.createElement('h3');title.textContent=e.trigger_text;
+  const answer=document.createElement('p');answer.textContent=e.response_text;
+  const meta=document.createElement('div');meta.className='meta';
+  meta.textContent=`التصنيف: ${e.category} · النمط: ${e.mode==='literal'?'حرفي':'هجين'} · ${e.enabled?'مفعل':'متوقف'} · رقم ${e.id}`;
+  const actions=document.createElement('div');actions.className='actions';
+  const edit=document.createElement('button');edit.className='secondary';edit.textContent='تعديل';
+  edit.onclick=()=>editEntry(e);
+  const del=document.createElement('button');del.className='danger';del.textContent='حذف';
+  del.onclick=()=>deleteEntry(e);
+  actions.append(edit,del);article.append(title,answer,meta,actions);$('entries').append(article);
+ }
+}
+function editEntry(e){
+ $('entryId').value=e.id;$('trigger').value=e.trigger_text;
+ $('response').value=e.response_text;$('category').value=e.category;
+ $('mode').value=e.mode;$('formTitle').textContent='تعديل التدريب رقم '+e.id;
+ $('save').textContent='حفظ التعديلات';window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetForm(){
+ $('entryId').value='';$('trigger').value='';$('response').value='';
+ $('category').value='عام';$('mode').value='hybrid';
+ $('formTitle').textContent='إضافة تدريب جديد';$('save').textContent='حفظ التدريب';
+ $('formStatus').textContent='';
+}
+async function deleteEntry(e){
+ if(!confirm('تأكيد حذف هذا التدريب؟'))return;
+ try{await api('/train/'+e.id,{method:'DELETE'});await load();message('formStatus','تم حذف التدريب.',true)}
+ catch(err){message('formStatus',err.message)}
+}
+$('connect').onclick=async()=>{
+ try{await load();$('workspace').classList.remove('hidden');message('status','تم الاتصال بقاعدة التدريب.',true)}
+ catch(e){$('workspace').classList.add('hidden');message('status',e.message)}
+};
+$('disconnect').onclick=()=>{$('key').value='';$('workspace').classList.add('hidden');message('status','تم مسح المفتاح من الصفحة.')};
+$('refresh').onclick=async()=>{try{await load();message('formStatus','تم تحديث البيانات.',true)}catch(e){message('formStatus',e.message)}};
+$('usersRefresh').onclick=async()=>{try{await loadUsers();message('formStatus','تم تحديث قائمة المستخدمين.',true)}catch(e){message('formStatus',e.message)}};
+$('save').onclick=async()=>{
+ const trigger_text=$('trigger').value.trim(),response_text=$('response').value.trim();
+ if(!trigger_text||!response_text){message('formStatus','أدخل السؤال والجواب أولاً.');return}
+ const id=$('entryId').value;
+ const payload={trigger_text,response_text,category:$('category').value.trim()||'عام',mode:$('mode').value};
+ try{
+  await api(id?'/train/'+id:'/train',{method:id?'PUT':'POST',body:JSON.stringify(payload)});
+  resetForm();await load();message('formStatus',id?'تم تحديث التدريب.':'تم حفظ التدريب بنجاح.',true);
+ }catch(e){message('formStatus',e.message)}
+};
+$('cancel').onclick=resetForm;
+$('filter').oninput=render;
+</script>
+</body>
+</html>
