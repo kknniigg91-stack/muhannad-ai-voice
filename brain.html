@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>عقل مهند - مركز التدريب</title>
+<title>عقل مهند - مركز التدريب والمراقبة</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Tajawal',sans-serif}
 body{background:radial-gradient(circle at 20% 10%,#1a1230 0%,#0a0a14 45%,#02020a 100%);color:#fff;min-height:100dvh;padding:16px}
@@ -16,6 +17,9 @@ input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px soli
 input:focus,textarea:focus{outline:none;border-color:#7c5cff}
 button{background:linear-gradient(135deg,#7c5cff,#5a3ce0);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-weight:bold;cursor:pointer;width:100%;font-family:inherit;font-size:14px;transition:.2s}
 button:active{transform:scale(.97)}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab-btn{flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#8a8aa0;font-weight:bold;cursor:pointer;text-align:center;transition:0.3s}
+.tab-btn.active{background:linear-gradient(135deg,rgba(124,92,255,.3),rgba(124,92,255,.1));color:#fff;border-color:#7c5cff}
 .stats{display:flex;gap:10px;text-align:center}
 .stat-box{flex:1;background:rgba(255,255,255,.05);border-radius:12px;padding:10px;border:1px solid rgba(255,255,255,.1)}
 .stat-box .num{font-size:24px;font-weight:bold;color:#00e5c0}
@@ -25,69 +29,96 @@ button:active{transform:scale(.97)}
 .training-item .response{color:#e0e0e0;font-size:13px;margin-bottom:8px;line-height:1.5}
 .training-item .meta{font-size:11px;color:#8a8aa0;display:flex;justify-content:space-between;align-items:center}
 .del-btn{background:#ff4d6d;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;width:auto}
+
+/* تنسيقات المراقبة */
+.user-item{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:0.2s}
+.user-item:hover{background:rgba(124,92,255,.1);border-color:#7c5cff}
+.user-item.active{border-color:#00e5c0;background:rgba(0,229,192,.05)}
+.chat-bubble{max-width:85%;padding:8px 12px;border-radius:12px;margin-bottom:8px;font-size:13px;line-height:1.5}
+.chat-bubble.user{align-self:flex-start;background:rgba(124,92,255,.2);border:1px solid rgba(124,92,255,.3);color:#e6dfff;margin-right:auto}
+.chat-bubble.ai{align-self:flex-end;background:rgba(0,229,192,.1);border:1px solid rgba(0,229,192,.3);color:#d4fff6;margin-left:auto}
+.chat-time{font-size:10px;color:#8a8aa0;margin-top:4px;text-align:left}
+#chatViewer{display:none;flex-direction:column;gap:8px;margin-top:10px}
 </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <h1>🧠 عقل مهند</h1>
   <p class="subtitle">مركز إدارة وتدريب الشخصية الذكية</p>
 
-  <div class="stats card">
-    <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">إجمالي التدريبات</div></div>
-    <div class="stat-box"><div class="num" id="statActive">0</div><div class="lbl">التدريبات النشطة</div></div>
+  <div class="tabs">
+    <div class="tab-btn active" onclick="switchTab('trainings')">📚 التدريبات</div>
+    <div class="tab-btn" onclick="switchTab('monitoring')">👁️ المستخدمين والمراقبة</div>
   </div>
 
-  <div class="card">
-    <h2>➕ إضافة تدريب جديد</h2>
-    <input type="text" id="trigInput" placeholder="النص المُحفّز (سؤال المستخدم)">
-    <textarea id="respInput" placeholder="رد الذكاء الاصطناعي" rows="3"></textarea>
-    <select id="catInput">
-      <option value="عام">عام</option>
-      <option value="ترحيب">ترحيب</option>
-      <option value="نكتة">نكتة</option>
-      <option value="شخصية">شخصية</option>
-      <option value="غزل">غزل</option>
-    </select>
-    <button onclick="addTraining()">حفظ التدريب</button>
+  <!-- تبويب التدريبات -->
+  <div id="tab-trainings">
+    <div class="stats card">
+      <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">إجمالي التدريبات</div></div>
+      <div class="stat-box"><div class="num" id="statActive">0</div><div class="lbl">التدريبات النشطة</div></div>
+    </div>
+
+    <div class="card">
+      <h2>➕ إضافة تدريب جديد</h2>
+      <input type="text" id="trigInput" placeholder="النص المُحفّز (سؤال المستخدم)">
+      <textarea id="respInput" placeholder="رد الذكاء الاصطناعي" rows="3"></textarea>
+      <select id="catInput">
+        <option value="عام">عام</option>
+        <option value="ترحيب">ترحيب</option>
+        <option value="نكتة">نكتة</option>
+        <option value="شخصية">شخصية</option>
+        <option value="غزل">غزل</option>
+      </select>
+      <button onclick="addTraining()">حفظ التدريب</button>
+    </div>
+
+    <div class="card">
+      <h2>📋 التدريبات المحفوظة</h2>
+      <div id="trainingsList"></div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>📋 التدريبات المحفوظة</h2>
-    <div id="trainingsList"></div>
-  </div>
+  <!-- تبويب المراقبة -->
+  <div id="tab-monitoring" style="display:none;">
+    <div class="card">
+      <h2>👥 المستخدمين (الذين تحدثوا مع مهند)</h2>
+      <button onclick="loadUsers()" style="margin-bottom:10px; background:linear-gradient(135deg,#00e5c0,#00a085); color:#001a15;">🔄 تحديث قائمة المستخدمين</button>
+      <div id="usersList"></div>
+    </div>
 
-
-  <div class="card" id="monitorCard">
-    <h2>👁️ المراقبة (سجل المحادثات)</h2>
-    <button onclick="loadMonitoring()" style="margin-bottom:10px; background:linear-gradient(135deg,#00e5c0,#00a085); color:#001a15;">🔄 تحديث السجل</button>
-    <div id="monitorList" style="max-height: 300px; overflow-y: auto;"></div>
+    <div class="card" id="chatViewerCard" style="display:none;">
+      <h2 id="chatViewerTitle">💬 محادثات المستخدم</h2>
+      <div id="chatViewer"></div>
+    </div>
   </div>
 
 <script>
-function getTrainings() {
-    return JSON.parse(localStorage.getItem('brain_trainings') || '[]');
+// إعدادات Supabase
+const SUPABASE_URL = "https://qptgbcdxwtxsxbxizuta.supabase.co";
+const SUPABASE_KEY = "sb_publishable_lf9XiKrsg7IWFhvgQ7HPDA_GOyBX6ro";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ================= التبويبات =================
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('tab-trainings').style.display = tabName === 'trainings' ? 'block' : 'none';
+    document.getElementById('tab-monitoring').style.display = tabName === 'monitoring' ? 'block' : 'none';
 }
-function saveTrainings(data) {
-    localStorage.setItem('brain_trainings', JSON.stringify(data));
-}
+
+// ================= نظام التدريبات (LocalStorage) =================
+function getTrainings() { return JSON.parse(localStorage.getItem('brain_trainings') || '[]'); }
+function saveTrainings(data) { localStorage.setItem('brain_trainings', JSON.stringify(data)); }
 
 function addTraining() {
     const trig = document.getElementById('trigInput').value.trim();
     const resp = document.getElementById('respInput').value.trim();
     const cat = document.getElementById('catInput').value;
-
     if (!trig || !resp) return alert("الرجاء ملء الحقول!");
-
+    
     const trainings = getTrainings();
-    trainings.push({
-        id: Date.now(),
-        trigger_text: trig,
-        response_text: resp,
-        category: cat,
-        created_at: new Date().toISOString()
-    });
+    trainings.push({ id: Date.now(), trigger_text: trig, response_text: resp, category: cat, created_at: new Date().toISOString() });
     saveTrainings(trainings);
-
+    
     document.getElementById('trigInput').value = '';
     document.getElementById('respInput').value = '';
     renderDashboard();
@@ -105,13 +136,13 @@ function renderDashboard() {
     const trainings = getTrainings();
     document.getElementById('statTotal').textContent = trainings.length;
     document.getElementById('statActive').textContent = trainings.length;
-
+    
     const list = document.getElementById('trainingsList');
     if (trainings.length === 0) {
         list.innerHTML = '<p style="color:#8a8aa0; text-align:center; font-size:13px;">لا توجد تدريبات بعد.</p>';
         return;
     }
-
+    
     list.innerHTML = trainings.reverse().map(t => `
         <div class="training-item">
             <div class="trigger">س: ${t.trigger_text}</div>
@@ -124,9 +155,91 @@ function renderDashboard() {
     `).join('');
 }
 
-// تشغيل اللوحة فوراً بدون مفتاح
+// ================= نظام المراقبة (Supabase) =================
+async function loadUsers() {
+    const list = document.getElementById('usersList');
+    list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ تحميل المستخدمين...</p>';
+    
+    const { data, error } = await supabaseClient
+        .from('chats')
+        .select('username, created_at')
+        .eq('role', 'user') // نجيب بس رسائل المستخدمين
+        .order('created_at', { ascending: false });
+        
+    if (error) {
+        list.innerHTML = '<p style="color:#ff4d6d;">خطأ: ' + error.message + '</p>';
+        return;
+    }
+    
+    // استخراج أسماء المستخدمين الفريدة
+    const uniqueUsers = {};
+    data.forEach(chat => {
+        if (!uniqueUsers[chat.username]) {
+            uniqueUsers[chat.username] = { username: chat.username, last_seen: chat.created_at, count: 1 };
+        } else {
+            uniqueUsers[chat.username].count++;
+            if (new Date(chat.created_at) > new Date(uniqueUsers[chat.username].last_seen)) {
+                uniqueUsers[chat.username].last_seen = chat.created_at;
+            }
+        }
+    });
+    
+    const usersArray = Object.values(uniqueUsers);
+    if (usersArray.length === 0) {
+        list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا يوجد مستخدمين بعد.</p>';
+        return;
+    }
+    
+    list.innerHTML = usersArray.map(u => `
+        <div class="user-item" onclick="loadUserChats('${u.username}', this)">
+            <div>
+                <strong style="color:#00e5c0;">👤 ${u.username}</strong>
+                <div style="font-size:11px; color:#8a8aa0; margin-top:4px;">آخر ظهور: ${new Date(u.last_seen).toLocaleString('ar-IQ')}</div>
+            </div>
+            <span style="background:rgba(124,92,255,.2); padding:4px 8px; border-radius:10px; font-size:12px;">${u.count} رسالة</span>
+        </div>
+    `).join('');
+}
+
+async function loadUserChats(username, element) {
+    // نلون المستخدم المختار
+    document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+    if (element) element.classList.add('active');
+
+    const viewerCard = document.getElementById('chatViewerCard');
+    const viewer = document.getElementById('chatViewer');
+    const title = document.getElementById('chatViewerTitle');
+    
+    viewerCard.style.display = 'block';
+    title.textContent = '💬 محادثات: ' + username;
+    viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ التحميل...</p>';
+    
+    // ننزل لتحت عشان يشوف المحادثة
+    viewerCard.scrollIntoView({ behavior: 'smooth' });
+
+    const { data, error } = await supabaseClient
+        .from('chats')
+        .select('*')
+        .eq('username', username)
+        .order('created_at', { ascending: true });
+        
+    if (error) {
+        viewer.innerHTML = '<p style="color:#ff4d6d;">خطأ: ' + error.message + '</p>';
+        return;
+    }
+    
+    viewer.innerHTML = data.map(chat => `
+        <div class="chat-bubble ${chat.role === 'user' ? 'user' : 'ai'}">
+            ${chat.message}
+            <div class="chat-time">${new Date(chat.created_at).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})}</div>
+        </div>
+    `).join('');
+}
+
+// تشغيل عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     renderDashboard();
+    loadUsers();
 });
 </script>
 </body>
