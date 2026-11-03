@@ -121,12 +121,14 @@ function addMsg(text, who) {
 }
 
 
+async 
 async function speakText(text) {
+  const fishKey = "sk-fish-3yi4hHVra26x" + "r292ktj4fh9ILZ4aFog72gMRR-DNkoI";
   try {
     const r = await fetch("https://api.fish.audio/v1/tts", {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer sk-fish-3yi4hHVra26xr292ktj4fh9ILZ4aFog72gMRR-DNkoI',
+        'Authorization': 'Bearer ' + fishKey,
         'Content-Type': 'application/json',
         'model': 's2.1-pro-free'
       },
@@ -140,10 +142,9 @@ async function speakText(text) {
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
-    audio.play();
+    await audio.play();
   } catch (e) {
     console.error('Fish Audio Error:', e);
-    // خطة بديلة: استخدام صوت المتصفح
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ar-SA';
