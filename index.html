@@ -24,7 +24,35 @@ button:disabled{opacity:.5;cursor:not-allowed}
 #micBtn.recording{color:#ff4d6d;text-shadow:0 0 10px #ff4d6d;}
 </style>
 <link rel="manifest" href="manifest.json">
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+// --- كود زر التثبيت ---
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block'; // إظهار الزر لما يكون جاهز
+});
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+  } else {
+    alert('التثبيت غير متاح حالياً (قد يكون التطبيق مثبت مسبقاً أو المتصفح لا يدعمه).');
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.style.display = 'none';
+});
+
+</script>
 
 <style>
 #nameModal { position:fixed; inset:0; background:#0a0a14; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center; }
@@ -41,6 +69,9 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
   <h1>💬 محادثة وية مهند</h1>
+  
+  <button id="installBtn" style="display:none; margin: 0 auto 10px auto; background: linear-gradient(135deg,#00c4a3,#00a085); color:#fff; border:none; border-radius:20px; padding:8px 18px; font-weight:bold; font-family:inherit; cursor:pointer; box-shadow:0 4px 10px rgba(0,196,163,0.3); font-size:14px;">📲 تثبيت التطبيق</button>
+
   <p class="note">🎙️ ملاحظة: الصوت حاليا متوقف بعدين اسوي مجال ماكو 🥰</p>
   <div id="chat-box">
     <div class="msg ai">هلا حب 💘 شلونك شكو ماكو</div>
@@ -201,6 +232,34 @@ if (SpeechRecognition) {
 } else {
   micBtn.addEventListener('click', () => alert('متصفحك ما يدعم الإدخال الصوتي.'));
 }
+
+// --- كود زر التثبيت ---
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block'; // إظهار الزر لما يكون جاهز
+});
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+  } else {
+    alert('التثبيت غير متاح حالياً (قد يكون التطبيق مثبت مسبقاً أو المتصفح لا يدعمه).');
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.style.display = 'none';
+});
+
 </script>
 
 <script>
@@ -244,6 +303,34 @@ if (!userName) {
     document.getElementById('chat-box').innerHTML = '';
     addMsg(greeting, 'ai');
 }
+
+// --- كود زر التثبيت ---
+let deferredPrompt;
+const installBtn = document.getElementById('installBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBtn.style.display = 'block'; // إظهار الزر لما يكون جاهز
+});
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      installBtn.style.display = 'none';
+    }
+    deferredPrompt = null;
+  } else {
+    alert('التثبيت غير متاح حالياً (قد يكون التطبيق مثبت مسبقاً أو المتصفح لا يدعمه).');
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  installBtn.style.display = 'none';
+});
+
 </script>
 </body>
 </html>
