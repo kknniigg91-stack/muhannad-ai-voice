@@ -162,8 +162,21 @@ async function sendMessage(isVoice = false) {
     
     addMsg(d.reply, 'ai');
     if (isVoice) {
-        // الذكاء الاصطناعي صار يبدأ رده بـ (عاش هالصوت)، فنقرأ الرد كامل مرة وحدة
-        speakText(d.reply);
+        if (d.audio_url) {
+            const player = new Audio(d.audio_url);
+            player.play().catch(() => {
+                const notice = addMsg('اضغط الزر حتى تسمع صوت مهند:', 'ai');
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = '🔊 تشغيل صوت مهند';
+                btn.addEventListener('click', () => player.play().catch(() => {
+                    addMsg('تعذر تشغيل الملف الصوتي. تحقق من اتصال المنصة.', 'ai');
+                }));
+                notice.appendChild(btn);
+            });
+        } else {
+            addMsg('تعذر توليد صوت مهند: ' + (d.audio_error || 'لم يصل ملف صوت من الخادم'), 'ai');
+        }
     }
     history.push({ role: 'user', text: text });
     history.push({ role: 'model', text: d.reply });

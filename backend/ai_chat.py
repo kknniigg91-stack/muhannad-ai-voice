@@ -1,5 +1,6 @@
 import os
 import time
+import uuid
 import httpx
 from collections import defaultdict
 from pathlib import Path
@@ -8,6 +9,7 @@ from pydantic import BaseModel
 
 router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent
+SAMPLES_DIR = BASE_DIR / "samples"
 
 # إعدادات الحد اليومي (30 رسالة كل 24 ساعة)
 user_limits = defaultdict(list)
@@ -104,4 +106,57 @@ async def chat(req: ChatRequest, request: Request):
     except (KeyError, IndexError):
         reply_text = "عذراً، لم أتمكن من توليد رد."
         
-    return {"ok": True, "reply": reply_text, "engine": "groq"}
+    audio_url = None
+    audio_error = None
+
+    if req.is_voice:
+        fish = {}
+        env_file = BASE_DIR / ".env"
+        if env_file.exists():
+            for line in env_file.read_text(encoding="utf-8").splitlines():
+                if line.startswith(("FISH_AUDIO_API_KEY=", "FISH_AUDIO_REFERENCE_ID=")):
+                    k, v = line.split("=", 1)
+                    fish[k] = v.strip().strip('"').strip("'")
+
+        fish_key = os.environ.get("FISH_AUDIO_API_KEY") or fish.get("FISH_AUDIO_API_KEY")
+        reference_id = os.environ.get("FISH_AUDIO_REFERENCE_ID") or fish.get("FISH_AUDIO_REFERENCE_ID")
+
+        if not fish_key or not reference_id:
+            audio_error = "إعدادات Fish Audio غير مكتملة في backend/.env"
+        else:
+            try:
+                fish_headers = {
+                    "Authorization": f"Bearer {fish_key}",
+                    "Content-Type": "application/json",
+                    "model": "s2.1-pro-free"
+                }
+                fish_payload = {
+                    "text": reply_text,
+                    "reference_id": reference_id,
+                    "format": "mp3"
+                }
+                async with httpx.AsyncClient(timeout=120.0) as client:
+                    fish_response = await client.post(
+                        "https://api.fish.audio/v1/tts",
+                        headers=fish_headers,
+                        json=fish_payload
+                    )
+
+                content_type = fish_response.headers.get("content-type", "").lower()
+                if fish_response.status_code == 200 and content_type.startswith("audio/") and len(fish_response.content) > 1000:
+                    SAMPLES_DIR.mkdir(parents=True, exist_ok=True)
+                    filename = f"fish_{uuid.uuid4().hex}.mp3"
+                    (SAMPLES_DIR / filename).write_bytes(fish_response.content)
+                    audio_url = f"/api/sample/{filename}"
+                else:
+                    audio_error = f"Fish Audio رفض التوليد (HTTP {fish_response.status_code})"
+            except Exception as e:
+                audio_error = f"تعذر توليد الصوت: {type(e).__name__}"
+
+    return {
+        "ok": True,
+        "reply": reply_text,
+        "engine": "groq",
+        "audio_url": audio_url,
+        "audio_error": audio_error
+    }
