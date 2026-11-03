@@ -80,6 +80,7 @@ button:active{transform:scale(.97)}
 <script>
 // مسار العقل (Cloudflare Worker) لتجاوز الحظر
 const WORKER_URL = "https://muhannad-brain-v2.kknniigg91.workers.dev";
+let allChatsCache = [];
 
 function switchTab(tabName, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -168,40 +169,32 @@ async function loadUsers() {
     }
 }
 
-async function loadUserChats(username, element) {
+function loadUserChats(username, element) {
     document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
+
     const viewerCard = document.getElementById('chatViewerCard');
     const viewer = document.getElementById('chatViewer');
     const title = document.getElementById('chatViewerTitle');
     
     viewerCard.style.display = 'block';
     title.textContent = '💬 محادثات: ' + username;
-    viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ التحميل...</p>';
     viewerCard.scrollIntoView({ behavior: 'smooth' });
 
-    try {
-        const res = await fetch(`${WORKER_URL}/db/chats?username=eq.${encodeURIComponent(username)}&order=created_at.asc`, {
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        
-        if (data.length === 0) {
-            viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا توجد محادثات.</p>';
-            return;
-        }
-        
-        viewer.innerHTML = data.map(chat => `
-            <div class="chat-bubble ${chat.role === 'user' ? 'user' : 'ai'}">
-                ${chat.message}
-                <div class="chat-time">${new Date(chat.created_at).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})}</div>
-            </div>
-        `).join('');
-    } catch (e) {
-        viewer.innerHTML = '<p style="color:#ff4d6d; text-align:center;">فشل التحميل: ' + e.message + '</p>';
+    // نفلتر المحادثات من الذاكرة مباشرة (بدون طلب جديد)
+    const userChats = allChatsCache.filter(c => c.username === username).sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    
+    if (userChats.length === 0) {
+        viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا توجد محادثات.</p>';
+        return;
     }
+    
+    viewer.innerHTML = userChats.map(chat => `
+        <div class="chat-bubble ${chat.role === 'user' ? 'user' : 'ai'}">
+            ${chat.message}
+            <div class="chat-time">${new Date(chat.created_at).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})}</div>
+        </div>
+    `).join('');
 }
 
 document.addEventListener('DOMContentLoaded', () => { renderDashboard(); });
