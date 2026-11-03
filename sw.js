@@ -1,7 +1,3 @@
-const CACHE_NAME = 'muhannad-v1';
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(['/', 'index.html'])));
-});
-self.addEventListener('fetch', (event) => {
-  event.respondWith(caches.match(event.request).then((response) => response || fetch(event.request)));
-});
+self.addEventListener('install', (e) => { self.skipWaiting(); });
+self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
+self.addEventListener('fetch', (e) => {});

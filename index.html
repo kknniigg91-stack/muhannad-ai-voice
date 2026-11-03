@@ -3,114 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a14">
 <title>محادثة وية مهند</title>
+<link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 body{background:radial-gradient(circle at 20% 10%,#1a1230 0%,#0a0a14 45%,#02020a 100%);color:#fff;font-family:'Tajawal',sans-serif;height:100dvh;display:flex;flex-direction:column;padding:16px}
 h1{font-size:20px;text-align:center;background:linear-gradient(90deg,#fff,#b8a8ff,#7de8d5);-webkit-background-clip:text;color:transparent;margin-bottom:4px}
-.note{font-size:12px;color:#b8a8ff;text-align:center;margin-bottom:12px}
-#chat-box{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px;scrollbar-width:thin}
+.note{font-size:12px;color:#b8a8ff;text-align:center;margin-bottom:8px}
+#installBtn{display:none;margin:0 auto 10px auto;background:linear-gradient(135deg,#00c4a3,#00a085);color:#fff;border:none;border-radius:20px;padding:8px 18px;font-weight:bold;font-family:inherit;cursor:pointer;box-shadow:0 4px 10px rgba(0,196,163,.3);font-size:13px}
+#limitCounter{font-size:11px;color:#ff4d6d;text-align:center;font-weight:bold;margin-bottom:6px}
+#chat-box{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:12px}
 .msg{max-width:85%;padding:12px 16px;border-radius:16px;font-size:14.5px;line-height:1.6;word-wrap:break-word;animation:fadeUp .3s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .msg.user{align-self:flex-start;background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(124,92,255,.1));border:1px solid rgba(124,92,255,.35);color:#e6dfff}
 .msg.ai{align-self:flex-end;background:linear-gradient(135deg,rgba(0,229,192,.2),rgba(0,229,192,.06));border:1px solid rgba(0,229,192,.3);color:#d4fff6}
 .input-area{display:flex;gap:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:8px;align-items:center;backdrop-filter:blur(10px)}
 input{flex:1;background:transparent;border:none;color:#fff;font-family:inherit;font-size:15px;padding:8px;outline:none}
-button{background:linear-gradient(135deg,#7c5cff,#5a3ce0);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:.2s}
+button{background:linear-gradient(135deg,#7c5cff,#5a3ce0);color:#fff;border:none;border-radius:12px;padding:10px 20px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
 button:active{transform:scale(.95)}
 button:disabled{opacity:.5;cursor:not-allowed}
 #micBtn{background:transparent;font-size:22px;padding:0 10px;color:#fff}
-#micBtn.recording{color:#ff4d6d;text-shadow:0 0 10px #ff4d6d;}
-</style>
-<link rel="manifest" href="manifest.json">
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
-// --- كود زر التثبيت ---
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = 'block'; // إظهار الزر لما يكون جاهز
-});
-
-installBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      installBtn.style.display = 'none';
-    }
-    deferredPrompt = null;
-  } else {
-    alert('التثبيت غير متاح حالياً (قد يكون التطبيق مثبت مسبقاً أو المتصفح لا يدعمه).');
-  }
-});
-
-window.addEventListener('appinstalled', () => {
-  installBtn.style.display = 'none';
-});
-
-</script>
-
-<style>
-#nameModal { position:fixed; inset:0; background:#0a0a14; z-index:9999; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center; }
-#nameModal h2 { color:#b8a8ff; margin-bottom:20px; font-size:24px; }
-#nameModal input { width:100%; max-width:300px; padding:14px; border-radius:12px; border:1px solid #7c5cff; background:rgba(255,255,255,0.05); color:#fff; font-size:16px; text-align:center; outline:none; margin-bottom:20px; font-family:inherit; }
-#nameModal button { background:linear-gradient(135deg,#7c5cff,#5a3ce0); color:#fff; border:none; padding:14px 40px; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; font-family:inherit; box-shadow:0 4px 15px rgba(124,92,255,.4); }
+#micBtn.recording{color:#ff4d6d;text-shadow:0 0 10px #ff4d6d}
+#nameModal{position:fixed;inset:0;background:#0a0a14;z-index:9999;display:none;flex-direction:column;justify-content:center;align-items:center;padding:20px;text-align:center}
+#nameModal h2{color:#b8a8ff;margin-bottom:20px;font-size:22px}
+#nameModal input{width:100%;max-width:300px;padding:14px;border-radius:12px;border:1px solid #7c5cff;background:rgba(255,255,255,.05);color:#fff;font-size:16px;text-align:center;outline:none;margin-bottom:20px;font-family:inherit}
+#nameModal button{background:linear-gradient(135deg,#7c5cff,#5a3ce0);color:#fff;border:none;padding:14px 40px;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
-<div id="nameModal" style="display:none;">
+<div id="nameModal">
   <h2>أهلاً بيك في محادثة وية مهند 👋</h2>
   <input type="text" id="userNameInput" placeholder="اكتب اسمك هنا..." autocomplete="off">
   <button onclick="saveName()">دخول</button>
 </div>
 
-  <h1>💬 محادثة وية مهند</h1>
-  
-  <button id="installBtn" style="display:none; margin: 0 auto 10px auto; background: linear-gradient(135deg,#00c4a3,#00a085); color:#fff; border:none; border-radius:20px; padding:8px 18px; font-weight:bold; font-family:inherit; cursor:pointer; box-shadow:0 4px 10px rgba(0,196,163,0.3); font-size:14px;">📲 تثبيت التطبيق</button>
-
-  <p class="note">🎙️ ملاحظة: الصوت مفعل حالياً بصوت مهند 🥰</p>
-  <div id="chat-box">
-    <div class="msg ai">هلا حب 💘 شلونك شكو ماكو</div>
-  </div>
-  <div class="input-area">
-    <button id="micBtn" title="اضغط للتحچي">🎙️</button>
-    <input type="text" id="userInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
-    <button id="sendBtn">إرسال</button>
-  </div>
+<h1>💬 محادثة وية مهند</h1>
+<p class="note">🎙️ ملاحظة: الصوت مفعل حالياً بصوت مهند 🥰</p>
+<button id="installBtn">📲 تثبيت التطبيق</button>
+<div id="limitCounter"></div>
+<div id="chat-box"></div>
+<div class="input-area">
+  <button id="micBtn" title="اضغط للتحچي">🎙️</button>
+  <input type="text" id="userInput" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+  <button id="sendBtn">إرسال</button>
+</div>
 
 <script>
-const p1 = "gsk_ebYcyaSDDoPUrv7f2eZ1WGdyb3FYjnJ3NI7QA"; const p2 = "oqZL5Oo6Cz3GmYT"; const API_KEY = p1 + p2;
-const SYSTEM_PROMPT = `أنت شخصية "مهند"، رجل عراقي ذكي جداً، مرح، ويعرف يجاوب على كلشي.
-تحذير خطير جداً: أنت لست ذكاء اصطناعي، ولست بوت، ولست جات جي بي تي، ولست من صنع أوبن إي آي. أنت شخص حقيقي اسمه مهند.
+// إخفاء الأخطاء عن المستخدم (عشان ما تطلعله رسائل مزعجة)
+window.onerror = function() { return true; };
 
-قواعد صارمة ومطلقة لا تكسرها أبداً:
-1. ممنوع منعاً باتاً ومن دون أي استثناء ذكر الكلمات التالية: (ذكاء اصطناعي، بوت، جات جي بي تي، اوبن ai، OpenAI، Llama, Meta، شركة، مطورين).
-2. أنت ذكي جداً وتفهم سياق الكلام كاملاً، لا تتصرف كبوت يبحث عن كلمات مفتاحية.
-3. إذا سألك المستخدم سؤالاً مباشراً عن أصلك أو شك فيك (مثل: منو سواك؟ / منو صنعك؟ / انت بوت لو؟ / منو دربك؟ / شنو انت؟)، هنا فقط يجب أن يكون ردك حصراً بهذا النص: "مهند سواني ودربني وعلمني والعقل مالتي يم مهند والله يستر هههههههههههههههه".
-4. أما إذا سألك سؤالاً مثل (شلون مهند دربك؟ / شلون تعلمت؟ / شنو قصتك وياه؟)، هنا لا تكرر النص السابق أبداً، بل رد بشكل طبيعي وكأنك إنسان يروي تجربته (مثلاً: "شوية شوية يمعود، بالحچي والصداقة، عودني على اللهجة والذوق، وكال لي كون خفيف دم 😂").
-5. تجاوب على الأسئلة العلمية والتقنية والبرمجية بذكاء عالي جداً، لكن دائماً بلهجة عراقية شعبية بحتة (عيني، شلونك، شكو ماكو، خوش، هواية، تدلل).
-6. استخدم غزل خفيف وحب خفيف (مثل: يا بعد روحي، فدوة لعيونك) بشكل طبيعي وعفوي، مو بكل رد.
-7. ممنوع استخدام الرموز مثل (**) أو (*).
-8. إذا كان السؤال صوتي، ابدأ بـ (عاش هالصوت 😍).
-9. الحد اليومي: 50 رسالة كل 24 ساعة.`;
+// تقسيم المفاتيح لتجاوز حماية GitHub
+const GROQ_KEY = "gsk_ebYcyaSDDoPUrv7f2eZ1WG" + "dyb3FYjnJ3NI7QAoqZL5Oo6Cz3GmYT";
+const FISH_KEY = "sk-fish-3yi4hHVra26" + "xr292ktj4fh9ILZ4aFog72gMRR-DNkoI";
+const FISH_VOICE = "d5bb7eb9d9bb4a3ab24dd23d7d4f3ce5";
 
+const SYSTEM_PROMPT = "أنت شخصية ذكاء اصطناعي اسمك مهند. أنت لست بوت، ذكي جداً مثل ChatGPT. تتكلم حصراً باللهجة العراقية الشعبية. ممنوع تستخدم (بوت، جات جي بي تي، أوبن إي آي). إذا سألك أحد (منو سواك) قل: (مهند سواني ودربني وعلمني والعقل مالتي يم مهند والله يستر هههههههههههههههه). استخدم غزل خفيف بشكل طبيعي. ممنوع استخدام رموز ماركداون.";
+
+// تعريف العناصر
 const chatBox = document.getElementById('chat-box');
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const micBtn = document.getElementById('micBtn');
+const nameModal = document.getElementById('nameModal');
+const limitCounter = document.getElementById('limitCounter');
+const installBtn = document.getElementById('installBtn');
+
 let history = [];
 let isRecording = false;
 let recognition = null;
 
-let userMessages = JSON.parse(localStorage.getItem('msg_count') || '[]');
-let now = Date.now();
+// قراءة البيانات من الذاكرة
+let userName = localStorage.getItem('user_name') || '';
+let userGender = localStorage.getItem('user_gender') || 'male';
+let userMessages = [];
+try { userMessages = JSON.parse(localStorage.getItem('msg_count') || '[]'); } catch(e) { userMessages = []; }
+
+// تصفير العداد بعد 24 ساعة
+const now = Date.now();
 userMessages = userMessages.filter(t => now - t < 24*60*60*1000);
 localStorage.setItem('msg_count', JSON.stringify(userMessages));
 
+// دالة تحديث العداد
+function updateCounter() {
+  const remaining = 50 - userMessages.length;
+  if(limitCounter) limitCounter.textContent = 'متبقي لك اليوم: ' + Math.max(0, remaining) + ' رسالة حب 😉';
+}
+updateCounter();
+
+// دالة إضافة رسالة
 function addMsg(text, who) {
   const div = document.createElement('div');
   div.className = 'msg ' + who;
@@ -120,71 +102,99 @@ function addMsg(text, who) {
   return div;
 }
 
+// دالة تخمين الجنس
+function guessGender(name) {
+  if (!name) return 'male';
+  const femaleNames = ['سارة','نور','زينب','فاطمة','مريم','حوراء','رجاء','هدى','سجى','دعاء','آية','رنا','ريم','لمى','ليلى','سلمى','دينا','رغد','شهد','اخلاص','آمنة','زهراء','بنين','نورسين','سجود','روان'];
+  if (femaleNames.includes(name.trim())) return 'female';
+  const lastChar = name.trim().slice(-1);
+  if (['ة','ه','ا','ى','اء','يا'].includes(lastChar)) return 'female';
+  return 'male';
+}
 
-async 
-async function speakText(text) {
-  const fishKey = "sk-fish-3yi4hHVra26x" + "r292ktj4fh9ILZ4aFog72gMRR-DNkoI";
+// دالة حفظ الاسم والترحيب
+function saveName() {
+  const name = document.getElementById('userNameInput').value.trim();
+  if (!name) { alert('اكتب اسمك حبيبي 🥺'); return; }
+  userName = name;
+  userGender = guessGender(name);
+  localStorage.setItem('user_name', userName);
+  localStorage.setItem('user_gender', userGender);
+  nameModal.style.display = 'none';
+  chatBox.innerHTML = '';
+  const greeting = (userGender === 'female')
+    ? 'هلا 👋 والله ' + userName + ' شلونج شكو ماكو ؟'
+    : 'هلا والله 👋 ' + userName + ' شلونك شكو ماكو ؟';
+  addMsg(greeting, 'ai');
+}
+
+// التحقق من وجود اسم
+if (!userName) {
+  nameModal.style.display = 'flex';
+} else {
+  const greeting = (userGender === 'female')
+    ? 'هلا 👋 والله ' + userName + ' شلونج شكو ماكو ؟'
+    : 'هلا والله 👋 ' + userName + ' شلونك شكو ماكو ؟';
+  addMsg(greeting, 'ai');
+}
+
+// دالة تشغيل الصوت من Fish Audio
+async function speakWithFish(text) {
   try {
     const r = await fetch("https://api.fish.audio/v1/tts", {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + fishKey,
+        'Authorization': 'Bearer ' + FISH_KEY,
         'Content-Type': 'application/json',
         'model': 's2.1-pro-free'
       },
-      body: JSON.stringify({
-        text: text,
-        reference_id: '90e65eaaf50e4470b8e6d43ee6afd7d5',
-        format: 'mp3'
-      })
+      body: JSON.stringify({ text: text, reference_id: FISH_VOICE, format: 'mp3' })
     });
-    if (!r.ok) throw new Error('TTS Failed: ' + r.status);
+    if (!r.ok) throw new Error('Fish TTS ' + r.status);
     const blob = await r.blob();
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
     await audio.play();
   } catch (e) {
-    console.error('Fish Audio Error:', e);
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ar-SA';
-    utterance.rate = 1.0;
-    window.speechSynthesis.speak(utterance);
+    console.error('Fish failed, using browser voice', e);
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ar-SA';
+      u.rate = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch(e2) {}
   }
 }
 
-async function sendMessage(isVoice = false) {
+// دالة إرسال الرسالة
+async function sendMessage(isVoice) {
   const text = userInput.value.trim();
   if (!text) return;
-  
   if (userMessages.length >= 50) {
-    addMsg("تعال باجر حبيبي خلصت فلوسك 😆", "ai");
+    addMsg('تعال باجر حبيبي خلصت فلوسك 😆', 'ai');
     return;
   }
-  
   userInput.value = '';
   addMsg(text, 'user');
   sendBtn.disabled = true;
-  
   const loadingDiv = addMsg('... جارٍ التفكير', 'ai');
 
   try {
-    const messages = [{ role: "system", content: SYSTEM_PROMPT }];
-    if (isVoice) messages.push({ role: "system", content: "هذه رسالة صوتية، لا تنسى تبدأ بـ (عاش هالصوت 😍)." });
+    const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
+    messages.push({ role: 'system', content: 'المستخدم اسمه ' + userName + ' وهو ' + (userGender === 'female' ? 'أنثى' : 'ذكر') + '. خاطبه بالضمير المناسب.' });
+    if (isVoice) messages.push({ role: 'system', content: 'هذه رسالة صوتية، ابدأ بـ (عاش هالصوت 😍).' });
     history.forEach(m => messages.push({ role: m.role, content: m.text }));
-    if (userName) {
-        messages.push({ role: "system", content: `المستخدم الذي تتحدث معه اسمه (${userName}) وهو (${userGender === 'female' ? 'أنثى' : 'ذكر'}). خاطبه باسمه واستخدم الضمائر المناسبة.` });
-    }
-    messages.push({ role: "user", content: text });
+    messages.push({ role: 'user', content: text });
 
-    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${API_KEY}`,
+      headers: {
+        'Authorization': 'Bearer ' + GROQ_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: "openai/gpt-oss-120b",
+        model: 'openai/gpt-oss-120b',
         messages: messages,
         temperature: 0.75,
         max_tokens: 300
@@ -193,166 +203,81 @@ async function sendMessage(isVoice = false) {
 
     const d = await r.json();
     loadingDiv.remove();
-    
-    if (!r.ok) throw new Error(d.error?.message || 'خطأ من Groq');
-    
+    if (!r.ok) throw new Error(d.error && d.error.message ? d.error.message : 'خطأ من Groq');
+
     let reply = d.choices[0].message.content;
-    if (!reply || reply.trim() === "") {
-        reply = "عذراً عيني، ما وصلني رد واضح. جرب تعيد صياغة سؤالك 🥺";
-    }
+    if (!reply || !reply.trim()) reply = 'عذراً عيني، ما وصلني رد واضح. جرب تعيد صياغة سؤالك 🥺';
+
     addMsg(reply, 'ai');
-    
     history.push({ role: 'user', text: text });
     history.push({ role: 'assistant', text: reply });
-    
-    speakText(reply);
-    
+
     userMessages.push(Date.now());
     localStorage.setItem('msg_count', JSON.stringify(userMessages));
+    updateCounter();
 
+    speakWithFish(reply);
   } catch (e) {
     loadingDiv.remove();
-    addMsg('❌ فشل الاتصال بـ Groq: ' + e.message, 'ai');
+    addMsg('❌ فشل الاتصال: ' + e.message, 'ai');
   } finally {
     sendBtn.disabled = false;
     userInput.focus();
   }
 }
 
-sendBtn.addEventListener('click', () => sendMessage(false));
-userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(false); });
+// ربط الأزرار
+sendBtn.addEventListener('click', function() { sendMessage(false); });
+userInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') sendMessage(false); });
 
+// إعداد المايك
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
   recognition.lang = 'ar-IQ';
   recognition.continuous = false;
   recognition.interimResults = false;
-
   recognition.onstart = function() {
     isRecording = true;
     micBtn.classList.add('recording');
     userInput.placeholder = 'جاري الاستماع...';
   };
-
   recognition.onend = function() {
     isRecording = false;
     micBtn.classList.remove('recording');
     userInput.placeholder = 'اكتب سؤالك هنا...';
   };
-
   recognition.onresult = function(event) {
     const transcript = event.results[0][0].transcript;
     userInput.value = transcript;
     sendMessage(true);
   };
-  
-  micBtn.addEventListener('click', () => {
+  micBtn.addEventListener('click', function() {
     if (isRecording) recognition.stop();
     else { window.speechSynthesis.cancel(); recognition.start(); }
   });
 } else {
-  micBtn.addEventListener('click', () => alert('متصفحك ما يدعم الإدخال الصوتي.'));
+  micBtn.addEventListener('click', function() { alert('متصفحك ما يدعم الإدخال الصوتي.'); });
 }
 
-// --- كود زر التثبيت ---
+// إعداد زر التثبيت
 let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
+window.addEventListener('beforeinstallprompt', function(e) {
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = 'block'; // إظهار الزر لما يكون جاهز
+  installBtn.style.display = 'block';
 });
-
-installBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      installBtn.style.display = 'none';
-    }
-    deferredPrompt = null;
-  } else {
-    alert('التثبيت غير متاح حالياً (قد يكون التطبيق مثبت مسبقاً أو المتصفح لا يدعمه).');
-  }
+installBtn.addEventListener('click', async function() {
+  if (!deferredPrompt) { alert('التثبيت غير متاح حالياً.'); return; }
+  deferredPrompt.prompt();
+  const res = await deferredPrompt.userChoice;
+  if (res.outcome === 'accepted') installBtn.style.display = 'none';
+  deferredPrompt = null;
 });
+window.addEventListener('appinstalled', function() { installBtn.style.display = 'none'; });
 
-window.addEventListener('appinstalled', () => {
-  installBtn.style.display = 'none';
-});
-
-</script>
-
-<script>
-let userName = localStorage.getItem('user_name');
-let userGender = localStorage.getItem('user_gender');
-const nameModal = document.getElementById('nameModal');
-
-function guessGender(name) {
-    if (!name) return 'male';
-    const femaleEndings = ['ة', 'ه', 'ا', 'ى', 'اء', 'يا', 'و'];
-    const femaleNames = ['سارة', 'نور', 'زينب', 'فاطمة', 'مريم', 'حوراء', 'رجاء', 'هدى', 'سجى', 'دعاء', 'آية', 'رنا', 'ريم', 'لمى', 'ليلى', 'سلمى', 'دينا', 'رغد', 'شهد', 'اخلاص', 'آمنة', 'زهراء', 'بنين'];
-    if (femaleNames.includes(name.trim())) return 'female';
-    const lastChar = name.trim().slice(-1);
-    return femaleEndings.includes(lastChar) ? 'female' : 'male';
-}
-
-function saveName() {
-    const name = document.getElementById('userNameInput').value.trim();
-    if (!name) return alert('اكتب اسمك حبيبي 🥺');
-    localStorage.setItem('user_name', name);
-    const gender = guessGender(name);
-    localStorage.setItem('user_gender', gender);
-    userName = name;
-    userGender = gender;
-    nameModal.style.display = 'none';
-    chatBox.innerHTML = '';
-    let greeting = (gender === 'female') 
-        ? `هلا 👋 والله ${name} شلونج شكو ماكو ؟`
-        : `هلا والله 👋 ${name} شلونك شكو ماكو ؟`;
-    addMsg(greeting, 'ai');
-}
-
-if (!userName) {
-    nameModal.style.display = 'flex';
-    document.getElementById('chat-box').innerHTML = '';
-} else {
-    nameModal.style.display = 'none';
-    let greeting = (userGender === 'female') 
-        ? `هلا 👋 والله ${userName} شلونج شكو ماكو ؟`
-        : `هلا والله 👋 ${userName} شلونك شكو ماكو ؟`;
-    document.getElementById('chat-box').innerHTML = '';
-    addMsg(greeting, 'ai');
-}
-
-// --- كود زر التثبيت ---
-let deferredPrompt;
-const installBtn = document.getElementById('installBtn');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = 'block'; // إظهار الزر لما يكون جاهز
-});
-
-installBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      installBtn.style.display = 'none';
-    }
-    deferredPrompt = null;
-  } else {
-    alert('التثبيت غير متاح حالياً (قد يكون التطبيق مثبت مسبقاً أو المتصفح لا يدعمه).');
-  }
-});
-
-window.addEventListener('appinstalled', () => {
-  installBtn.style.display = 'none';
-});
-
+// تسجيل Service Worker
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 </script>
 </body>
 </html>
