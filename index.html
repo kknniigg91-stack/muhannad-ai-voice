@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a14">
 <title>محادثة وية مهند</title>
-<!-- Build Version 40 -->
+<!-- Build Version 41 -->
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -195,17 +195,22 @@ async function sendMessage(isVoice) {
 
   try {
 
-    // 🔍 1. نبحث في التدريبات المحلية أولاً
-    const brainTrainings = JSON.parse(localStorage.getItem('brain_trainings') || '[]');
+    // 🔍 1. نبحث في التدريبات من قاعدة البيانات
     let matchedTraining = null;
-    const searchText = text.toLowerCase().trim();
-    
-    for (let t of brainTrainings) {
-        if (searchText.includes(t.trigger_text.toLowerCase().trim()) || t.trigger_text.toLowerCase().trim().includes(searchText)) {
-            matchedTraining = t;
-            break;
+    try {
+        const trRes = await fetch(`${WORKER_URL}/db/trainings?select=*`, { headers: { 'Content-Type': 'application/json' } });
+        const brainTrainings = await trRes.json();
+        const searchText = text.toLowerCase().trim();
+        
+        if (Array.isArray(brainTrainings)) {
+            for (let t of brainTrainings) {
+                if (searchText.includes(t.trigger_text.toLowerCase().trim()) || t.trigger_text.toLowerCase().trim().includes(searchText)) {
+                    matchedTraining = t;
+                    break;
+                }
+            }
         }
-    }
+    } catch(e) { console.log('Training fetch error:', e); }
 
     // 🎯 2. إذا لگينا تدريب مطابق، نرد مباشرة بدون Groq
     if (matchedTraining) {

@@ -99,118 +99,60 @@ function switchTab(tabName, btn) {
 }
 
 // ================= التدريبات =================
-function getTrainings() { return JSON.parse(localStorage.getItem('brain_trainings') || '[]'); }
-function saveTrainings(data) { localStorage.setItem('brain_trainings', JSON.stringify(data)); }
 
-function addTraining() {
+async function loadTrainings() {
+    const list = document.getElementById('trainingsList');
+    try {
+        const res = await fetch(`${WORKER_URL}/db/trainings?select=*&order=created_at.desc`, { headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        
+        document.getElementById('statTotal').textContent = data.length;
+        document.getElementById('statActive').textContent = data.length;
+        
+        if (data.length === 0) {
+            list.innerHTML = '<p style="color:#8a8aa0; text-align:center; font-size:13px;">لا توجد تدريبات بعد.</p>';
+            return;
+        }
+        list.innerHTML = data.map(t => `
+            <div class="training-item">
+                <div class="trigger">س: ${t.trigger_text}</div>
+                <div class="response">ج: ${t.response_text}</div>
+                <div class="meta"><span>${t.category} • ${new Date(t.created_at).toLocaleDateString('ar')}</span><button class="del-btn" onclick="deleteTraining(${t.id})">حذف</button></div>
+            </div>
+        `).join('');
+    } catch(e) {
+        list.innerHTML = '<p style="color:#ff4d6d; text-align:center;">فشل تحميل التدريبات: ' + e.message + '</p>';
+    }
+}
+
+async function addTraining() {
     const trig = document.getElementById('trigInput').value.trim();
     const resp = document.getElementById('respInput').value.trim();
     const cat = document.getElementById('catInput').value;
     if (!trig || !resp) return alert("الرجاء ملء الحقول!");
-    const trainings = getTrainings();
-    trainings.push({ id: Date.now(), trigger_text: trig, response_text: resp, category: cat, created_at: new Date().toISOString() });
-    saveTrainings(trainings);
-    document.getElementById('trigInput').value = '';
-    document.getElementById('respInput').value = '';
-    renderDashboard();
-}
-
-function deleteTraining(id) {
-    if (!confirm("هل أنت متأكد من حذف هذا التدريب؟")) return;
-    let trainings = getTrainings();
-    trainings = trainings.filter(t => t.id !== id);
-    saveTrainings(trainings);
-    renderDashboard();
-}
-
-function renderDashboard() {
-    const trainings = getTrainings();
-    document.getElementById('statTotal').textContent = trainings.length;
-    document.getElementById('statActive').textContent = trainings.length;
-    const list = document.getElementById('trainingsList');
-    if (trainings.length === 0) {
-        list.innerHTML = '<p style="color:#8a8aa0; text-align:center; font-size:13px;">لا توجد تدريبات بعد.</p>';
-        return;
-    }
-    list.innerHTML = trainings.reverse().map(t => `
-        <div class="training-item">
-            <div class="trigger">س: ${t.trigger_text}</div>
-            <div class="response">ج: ${t.response_text}</div>
-            <div class="meta"><span>${t.category} • ${new Date(t.created_at).toLocaleDateString('ar')}</span><button class="del-btn" onclick="deleteTraining(${t.id})">حذف</button></div>
-        </div>
-    `).join('');
-}
-
-// ================= المراقبة =================
-async function loadUsers() {
-    const list = document.getElementById('usersList');
-    list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ تحميل المستخدمين...</p>';
     
     try {
-        const res = await fetch(`${WORKER_URL}/db/chats?select=*&order=created_at.desc`, {
-            headers: { 'Content-Type': 'application/json' }
+        await fetch(`${WORKER_URL}/db/trainings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trigger_text: trig, response_text: resp, category: cat })
         });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        allChatsCache = data;
-
-        const uniqueUsers = {};
-        data.forEach(chat => {
-            if (!uniqueUsers[chat.username]) {
-                uniqueUsers[chat.username] = { username: chat.username, last_seen: chat.created_at, count: 1 };
-            } else {
-                uniqueUsers[chat.username].count++;
-            }
-        });
-        
-        const usersArray = Object.values(uniqueUsers);
-        if (usersArray.length === 0) {
-            list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا يوجد مستخدمين بعد.</p>';
-            return;
-        }
-        
-        list.innerHTML = usersArray.map(u => `
-            <div class="user-item" onclick="loadUserChats('${u.username}', this)">
-                <div><strong style="color:#00e5c0;">👤 ${u.username}</strong><div style="font-size:11px; color:#8a8aa0; margin-top:4px;">آخر ظهور: ${new Date(u.last_seen).toLocaleString('ar-IQ')}</div></div>
-                <span style="background:rgba(124,92,255,.2); padding:4px 8px; border-radius:10px; font-size:12px;">${u.count} رسالة</span>
-            </div>
-        `).join('');
-    } catch (e) {
-        list.innerHTML = '<p style="color:#ff4d6d; text-align:center;">فشل الاتصال: ' + e.message + '</p>';
+        document.getElementById('trigInput').value = '';
+        document.getElementById('respInput').value = '';
+        loadTrainings(); // إعادة تحميل القائمة
+    } catch(e) {
+        alert("فشل الحفظ: " + e.message);
     }
 }
 
-function renderChatMessages(userChats) {
-    const viewer = document.getElementById('chatViewer');
-    if (userChats.length === 0) {
-        viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا توجد محادثات محفوظة.</p>';
-        return;
+async function deleteTraining(id) {
+    if (!confirm("هل أنت متأكد من حذف هذا التدريب؟")) return;
+    try {
+        await fetch(`${WORKER_URL}/db/trainings?id=eq.${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+        loadTrainings();
+    } catch(e) {
+        alert("فشل الحذف: " + e.message);
     }
-    viewer.innerHTML = userChats.map(chat => `
-        <div class="chat-bubble ${chat.role === 'user' ? 'user' : 'ai'}">
-            ${chat.message}
-            <div class="chat-time">${new Date(chat.created_at).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})}</div>
-        </div>
-    `).join('');
-    viewer.scrollTop = viewer.scrollHeight;
-}
-
-function loadUserChats(username, element) {
-    document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
-    if (element) element.classList.add('active');
-    
-    activeChatUsername = username;
-    document.getElementById('currentChatUser').textContent = username;
-    
-    const viewerCard = document.getElementById('chatViewerCard');
-    viewerCard.style.display = 'block';
-    viewerCard.scrollIntoView({ behavior: 'smooth' });
-
-    const userChats = allChatsCache
-        .filter(c => c.username === username)
-        .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-    
-    renderChatMessages(userChats);
 }
 
 async function adminSendReply() {
@@ -254,7 +196,7 @@ async function adminSendReply() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => { renderDashboard(); });
+document.addEventListener('DOMContentLoaded', () => { loadTrainings(); });
 </script>
 </body>
 </html>
