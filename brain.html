@@ -50,6 +50,7 @@ button:active{transform:scale(.97)}
     <div class="tab-btn" onclick="switchTab('monitoring', this)">👁️ المستخدمين والمراقبة</div>
   </div>
 
+  <!-- تبويب التدريبات -->
   <div id="tab-trainings">
     <div class="stats card">
       <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">إجمالي التدريبات</div></div>
@@ -68,6 +69,7 @@ button:active{transform:scale(.97)}
     </div>
   </div>
 
+  <!-- تبويب المراقبة -->
   <div id="tab-monitoring" style="display:none;">
     <div class="card">
       <h2>👥 المستخدمين (الذين تحدثوا مع مهند)</h2>
@@ -78,7 +80,6 @@ button:active{transform:scale(.97)}
     <div class="card" id="chatViewerCard" style="display:none;">
       <h2 id="chatViewerTitle">💬 محادثات: <span id="currentChatUser"></span></h2>
       <div id="chatViewer"></div>
-      <!-- خانة رد الإدارة -->
       <div class="admin-input-area">
         <input type="text" id="adminReplyInput" placeholder="اكتب ردك هنا كمساعد للذكاء..." onkeypress="if(event.key==='Enter') adminSendReply()">
         <button onclick="adminSendReply()">إرسال</button>
@@ -98,8 +99,7 @@ function switchTab(tabName, btn) {
     document.getElementById('tab-monitoring').style.display = tabName === 'monitoring' ? 'block' : 'none';
 }
 
-// ================= التدريبات =================
-
+// ================= التدريبات (من قاعدة البيانات) =================
 async function loadTrainings() {
     const list = document.getElementById('trainingsList');
     try {
@@ -139,7 +139,7 @@ async function addTraining() {
         });
         document.getElementById('trigInput').value = '';
         document.getElementById('respInput').value = '';
-        loadTrainings(); // إعادة تحميل القائمة
+        loadTrainings();
     } catch(e) {
         alert("فشل الحفظ: " + e.message);
     }
@@ -155,12 +155,83 @@ async function deleteTraining(id) {
     }
 }
 
+// ================= المراقبة (من قاعدة البيانات) =================
+async function loadUsers() {
+    const list = document.getElementById('usersList');
+    list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">جارٍ تحميل المستخدمين...</p>';
+    
+    try {
+        const res = await fetch(`${WORKER_URL}/db/chats?select=*&order=created_at.desc`, { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        
+        allChatsCache = data;
+
+        const uniqueUsers = {};
+        data.forEach(chat => {
+            if (!uniqueUsers[chat.username]) {
+                uniqueUsers[chat.username] = { username: chat.username, last_seen: chat.created_at, count: 1 };
+            } else {
+                uniqueUsers[chat.username].count++;
+            }
+        });
+        
+        const usersArray = Object.values(uniqueUsers);
+        if (usersArray.length === 0) {
+            list.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا يوجد مستخدمين بعد.</p>';
+            return;
+        }
+        
+        list.innerHTML = usersArray.map(u => `
+            <div class="user-item" onclick="loadUserChats('${u.username}', this)">
+                <div><strong style="color:#00e5c0;">👤 ${u.username}</strong><div style="font-size:11px; color:#8a8aa0; margin-top:4px;">آخر ظهور: ${new Date(u.last_seen).toLocaleString('ar-IQ')}</div></div>
+                <span style="background:rgba(124,92,255,.2); padding:4px 8px; border-radius:10px; font-size:12px;">${u.count} رسالة</span>
+            </div>
+        `).join('');
+    } catch (e) {
+        list.innerHTML = '<p style="color:#ff4d6d; text-align:center;">فشل الاتصال: ' + e.message + '</p>';
+    }
+}
+
+function renderChatMessages(userChats) {
+    const viewer = document.getElementById('chatViewer');
+    if (userChats.length === 0) {
+        viewer.innerHTML = '<p style="color:#8a8aa0; text-align:center;">لا توجد محادثات محفوظة.</p>';
+        return;
+    }
+    viewer.innerHTML = userChats.map(chat => `
+        <div class="chat-bubble ${chat.role === 'user' ? 'user' : 'ai'}">
+            ${chat.message}
+            <div class="chat-time">${new Date(chat.created_at).toLocaleTimeString('ar-IQ', {hour: '2-digit', minute:'2-digit'})}</div>
+        </div>
+    `).join('');
+    viewer.scrollTop = viewer.scrollHeight;
+}
+
+function loadUserChats(username, element) {
+    document.querySelectorAll('.user-item').forEach(el => el.classList.remove('active'));
+    if (element) element.classList.add('active');
+    
+    activeChatUsername = username;
+    document.getElementById('currentChatUser').textContent = username;
+    
+    const viewerCard = document.getElementById('chatViewerCard');
+    viewerCard.style.display = 'block';
+    viewerCard.scrollIntoView({ behavior: 'smooth' });
+
+    const userChats = allChatsCache
+        .filter(c => c.username === username)
+        .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    
+    renderChatMessages(userChats);
+}
+
 async function adminSendReply() {
     const input = document.getElementById('adminReplyInput');
     const text = input.value.trim();
     if (!text || !activeChatUsername) return;
 
-    input.value = ''; // تفريغ الحقل فوراً
+    input.value = '';
 
     try {
         const res = await fetch(`${WORKER_URL}/db/chats`, {
@@ -175,7 +246,6 @@ async function adminSendReply() {
         
         if (!res.ok) throw new Error('HTTP ' + res.status);
         
-        // نضيف الرسالة للمخزن المحلي بدون ما نطلب كل المحادثات من السيرفر
         const newChat = {
             id: Date.now(),
             username: activeChatUsername,
@@ -185,7 +255,6 @@ async function adminSendReply() {
         };
         allChatsCache.push(newChat);
         
-        // نحدث الواجهة
         const userChats = allChatsCache
             .filter(c => c.username === activeChatUsername)
             .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
