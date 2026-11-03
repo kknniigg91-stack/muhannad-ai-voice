@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a14">
 <title>محادثة وية مهند</title>
+<!-- Build Version 28 -->
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -57,7 +58,7 @@ window.onerror = function() { return true; };
 // تقسيم المفاتيح لتجاوز حماية GitHub
 const GROQ_KEY = "gsk_ebYcyaSDDoPUrv7f2eZ1WG" + "dyb3FYjnJ3NI7QAoqZL5Oo6Cz3GmYT";
 const FISH_KEY = "sk-fish-3yi4hHVra26" + "xr292ktj4fh9ILZ4aFog72gMRR-DNkoI";
-const FISH_VOICE = "d5bb7eb9d9bb4a3ab24dd23d7d4f3ce5";
+const FISH_VOICE = "588647f4ec334f2e9ab5377b12c36a41";
 
 const SYSTEM_PROMPT = "أنت شخصية ذكاء اصطناعي اسمك مهند. أنت لست بوت، ذكي جداً مثل ChatGPT. تتكلم حصراً باللهجة العراقية الشعبية. ممنوع تستخدم (بوت، جات جي بي تي، أوبن إي آي). إذا سألك أحد (منو سواك) قل: (مهند سواني ودربني وعلمني والعقل مالتي يم مهند والله يستر هههههههههههههههه). استخدم غزل خفيف بشكل طبيعي. ممنوع استخدام رموز ماركداون.";
 
@@ -141,7 +142,8 @@ if (!userName) {
 // دالة تشغيل الصوت من Fish Audio
 async function speakWithFish(text) {
   try {
-    const r = await fetch("https://api.fish.audio/v1/tts", {
+    const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent("https://api.fish.audio/v1/tts");
+    const r = await fetch(proxyUrl, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + FISH_KEY,
