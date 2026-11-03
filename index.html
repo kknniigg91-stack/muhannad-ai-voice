@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a14">
 <title>محادثة وية مهند</title>
-<!-- Build Version 41 -->
+<!-- Build Version 43 -->
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -73,7 +73,7 @@ const limitCounter = document.getElementById('limitCounter');
 const installBtn = document.getElementById('installBtn');
 
 let history = [];
-let lastRenderedMsgText = "";
+let lastPolledId = 0;
 let isRecording = false;
 let recognition = null;
 
@@ -97,7 +97,6 @@ updateCounter();
 
 // دالة إضافة رسالة
 function addMsg(text, who) {
-  lastRenderedMsgText = text;
   const div = document.createElement('div');
   div.className = 'msg ' + who;
   div.textContent = text;
@@ -188,7 +187,11 @@ async function sendMessage(isVoice) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: userName || 'زائر', role: 'user', message: text })
-        }).then();
+        }).then(res => res.json()).then(data => {
+            if (data && data[0] && data[0].id && data[0].id > lastPolledId) {
+                lastPolledId = data[0].id;
+            }
+        });
     } catch(e) { console.log(e); }
   sendBtn.disabled = true;
   const loadingDiv = addMsg('... جارٍ التفكير', 'ai');
@@ -257,7 +260,11 @@ async function sendMessage(isVoice) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: userName || 'زائر', role: 'assistant', message: reply })
-        }).then();
+        }).then(res => res.json()).then(data => {
+            if (data && data[0] && data[0].id && data[0].id > lastPolledId) {
+                lastPolledId = data[0].id;
+            }
+        });
     } catch(e) { console.log(e); }
     history.push({ role: 'user', text: text });
     history.push({ role: 'assistant', text: reply });
@@ -330,25 +337,34 @@ window.addEventListener('appinstalled', function() { installBtn.style.display = 
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 
 // دالة مراقبة رسائل الإدارة (تشتغل بالخلفية كل 3 ثواني)
-async function pollAdminMessages() {
-    if (!userName) return;
-    try {
-        const res = await fetch(`${WORKER_URL}/db/chats?username=eq.${encodeURIComponent(userName)}&order=created_at.desc&limit=3`, {
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await res.json();
-        if (!data || data.length === 0) return;
+    async function pollAdminMessages() {
+        if (!userName) return;
+        try {
+            const res = await fetch(`${WORKER_URL}/db/chats?username=eq.${encodeURIComponent(userName)}&order=created_at.desc&limit=5`, {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json();
+            if (!data || data.length === 0) return;
 
-        data.reverse(); // ترتيب من القديم للجديد
+            const maxId = Math.max(...data.map(m => m.id));
 
-        const lastAiMsg = data.filter(m => m.role === 'assistant').pop();
-        
-        // إذا في رسالة جديدة من الذكاء/الإدارة مو موجودة بالشاشة، نضيفها
-        if (lastAiMsg && lastAiMsg.message !== lastRenderedMsgText) {
-            addMsg(lastAiMsg.message, 'ai');
-        }
-    } catch(e) {}
-}
+            if (lastPolledId === 0) {
+                lastPolledId = maxId;
+                return;
+            }
+
+            const newAiMsgs = data.filter(m => m.id > lastPolledId && m.role === 'assistant');
+
+            if (newAiMsgs.length > 0) {
+                newAiMsgs.sort((a, b) => a.id - b.id);
+                newAiMsgs.forEach(m => addMsg(m.message, 'ai'));
+            }
+
+            if (maxId > lastPolledId) {
+                lastPolledId = maxId;
+            }
+        } catch(e) { console.log('Poll error:', e); }
+    }
 
 // تشغيل المراقبة
 setInterval(pollAdminMessages, 3000);
