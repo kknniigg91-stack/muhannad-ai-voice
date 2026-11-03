@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0a14">
 <title>محادثة وية مهند</title>
-<!-- Build Version 34 -->
+<!-- Build Version 35 -->
 <link rel="manifest" href="manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -183,6 +183,29 @@ async function sendMessage(isVoice) {
   const loadingDiv = addMsg('... جارٍ التفكير', 'ai');
 
   try {
+
+    // 🔍 1. نبحث في التدريبات المحلية أولاً
+    const brainTrainings = JSON.parse(localStorage.getItem('brain_trainings') || '[]');
+    let matchedTraining = null;
+    const searchText = text.toLowerCase().trim();
+    
+    for (let t of brainTrainings) {
+        if (searchText.includes(t.trigger_text.toLowerCase().trim()) || t.trigger_text.toLowerCase().trim().includes(searchText)) {
+            matchedTraining = t;
+            break;
+        }
+    }
+
+    // 🎯 2. إذا لگينا تدريب مطابق، نرد مباشرة بدون Groq
+    if (matchedTraining) {
+        loadingDiv.remove();
+        addMsg(matchedTraining.response_text, 'ai');
+        speakWithFish(matchedTraining.response_text);
+        sendBtn.disabled = false;
+        return; // نوقف هنا وما نروح للذكاء الاصطناعي
+    }
+
+    // 🤖 3. إذا ما لگينا تدريب، نروح للذكاء الاصطناعي (Groq)
     const messages = [{ role: 'system', content: SYSTEM_PROMPT }];
     messages.push({ role: 'system', content: 'المستخدم اسمه ' + userName + ' وهو ' + (userGender === 'female' ? 'أنثى' : 'ذكر') + '. خاطبه بالضمير المناسب.' });
     if (isVoice) messages.push({ role: 'system', content: 'هذه رسالة صوتية، ابدأ بـ (عاش هالصوت 😍).' });
