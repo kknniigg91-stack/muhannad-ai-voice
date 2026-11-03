@@ -52,7 +52,7 @@ const SYSTEM_PROMPT = `أنت شخصية "مهند"، رجل عراقي ذكي �
 6. استخدم غزل خفيف وحب خفيف (مثل: يا بعد روحي، فدوة لعيونك) بشكل طبيعي وعفوي، مو بكل رد.
 7. ممنوع استخدام الرموز مثل (**) أو (*).
 8. إذا كان السؤال صوتي، ابدأ بـ (عاش هالصوت 😍).
-9. الحد اليومي: 100 رسالة كل 24 ساعة.`;
+9. الحد اليومي: 50 رسالة كل 24 ساعة.`;
 
 const chatBox = document.getElementById('chat-box');
 const userInput = document.getElementById('userInput');
@@ -91,7 +91,7 @@ async function sendMessage(isVoice = false) {
   const text = userInput.value.trim();
   if (!text) return;
   
-  if (userMessages.length >= 30) {
+  if (userMessages.length >= 50) {
     addMsg("تعال باجر حبيبي خلصت فلوسك 😆", "ai");
     return;
   }
